@@ -1,8 +1,8 @@
 <div>
-thêm dấu xuống dòng html cho đoạn hội thoại này đây là khung chỉnh sửa ném cái này vào antigravity cùng với src và nro.py của bạn vào<br>
+đây là khung chỉnh sửa ném cái này vào antigravity cùng với src và nro.py của bạn vào<br>
 bảo nó theo khung này tạo một bản chỉnh sửa chạy cho termux <br>
 fix lỗi là song nhớ chia sẻ cho mọi người khi có thành quả nhé!<br>
-sory file chưa đủ thông tin có tôi up<br>
+sory file chưa đủ thông tin có tôi up! <br>
 https://www.facebook.com/groups/nro.termux<br>
 <br>
 hd cài đặt<br>
