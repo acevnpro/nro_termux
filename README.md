@@ -10,7 +10,7 @@ tải src về giải nén ở dowload link: https://drive.google.com/file/d/19X
 <br>
 vào termux lần lượt viết lệnh :<br>
 <br>
-termux-setup-storage ( cho phép dung bộ nhớ cái này quan trọng lắm )<br>
+termux-setup-storage ( cho phép dùng bộ nhớ cái này quan trọng lắm )<br>
 <br>
 pkg update && pkg upgrade<br>
 <br>
