@@ -2,3 +2,4 @@
 bảo nó theo khung này tạo một bản chỉnh sửa chạy cho termux 
 fix lỗi là song nhớ chia sẻ cho mọi người khi có thành quả nhé!
 sory file chưa đủ thông tin có tôi up
+https://www.facebook.com/groups/nro.termux
