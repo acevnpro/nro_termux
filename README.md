@@ -6,7 +6,10 @@ Hướng dẫn cài đặt<br><br>
 https://www.youtube.com/watch?v=D4LTha2tiVU<br><br>
   
 tải src về giải nén ở dowload link:<br> https://drive.google.com/file/d/19XdAJm8q5lRPqp5SVeMZj4mVr1lAKo11/view?usp=sharing<br><br>
-<br>
+
+bản mới chạy được ngrok https://drive.google.com/file/d/14JYe5QjKNyqyPYDj4xPcCBB_S9mGVmSx/view?usp=sharing
+
+<br><br>
 tải termux bản github tại đây<br> https://github.com/termux/termux-app/releases/tag/v0.118.3 <br>
 ai có rồi bỏ qua<br><br>
 vào termux lần lượt viết lệnh :<br>
