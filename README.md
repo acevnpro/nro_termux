@@ -18,7 +18,7 @@ pkg update && pkg upgrade<br>
 <br>
 pkg install python wget -y<br>
 <br>
-wget (https://github.com/acevnpro/nro_termux/releases/download/v1.1/nro.py)<br>
+wget https://github.com/acevnpro/nro_termux/releases/download/v1.1/nro.py<br>
 
 hoặc curl -O https://github.com/acevnpro/nro_termux/releases/download/v1.1/nro.py <br>
 nếu wget lỗi !
