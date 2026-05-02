@@ -4,7 +4,9 @@ https://www.facebook.com/groups/nro.termux<br>
 <br>
 Hướng dẫn cài đặt<br><br>
 https://www.youtube.com/watch?v=D4LTha2tiVU<br><br>
-  
+<br><br>
+lưu ý về bản mới ngrok phải có tài khoản đã ép thẻ visa để xác minh web tạo tk dùng cloudflare Free nên có thể bật thoải mái 
+  <br><br>
 tải src về giải nén ở dowload link bản mới chạy được ngrok<br><br> https://drive.google.com/file/d/17wqWUp3avOhv6xkgbX03joR3zLH6A7i1/view?usp=sharing
 
 <br><br>
