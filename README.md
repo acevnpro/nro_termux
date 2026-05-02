@@ -1,6 +1,9 @@
 <div>
  <br>
-https://www.facebook.com/groups/nro.termux<br>
+phở bò : https://www.facebook.com/groups/nro.termux<br><br>
+
+zalo : https://zalo.me/g/nran3u1pi3hgm9mq5mpc <br>
+ 
 <br>
 Hướng dẫn cài đặt<br><br>
 https://www.youtube.com/watch?v=D4LTha2tiVU<br><br>
