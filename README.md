@@ -8,9 +8,11 @@ zalo : https://zalo.me/g/nran3u1pi3hgm9mq5mpc <br>
 Hướng dẫn cài đặt<br><br>
 https://www.youtube.com/watch?v=D4LTha2tiVU<br><br>
 <br><br>
-lưu ý về bản mới ngrok phải có tài khoản đã ép thẻ visa để xác minh web tạo tk dùng cloudflare Free nên có thể bật thoải mái 
+lưu ý về bản mới ngrok phải có tài khoản đã ép thẻ visa để xác minh web tạo tk dùng cloudflare Free nên có thể bật thoải mái  <br><br>
+
+tất cả những file cần thiết cho các dự án :https://drive.google.com/drive/folders/1m9yQjo7JuaKr8So16u8k2hkGrO-xVL9V?usp=sharing
   <br><br>
-tải src về giải nén ở dowload link bản mới chạy được ngrok<br><br> https://drive.google.com/file/d/17wqWUp3avOhv6xkgbX03joR3zLH6A7i1/view?usp=sharing
+tải src về giải nén ở dowload link :<br><br> https://drive.google.com/file/d/17wqWUp3avOhv6xkgbX03joR3zLH6A7i1/view?usp=sharing
 
 <br><br>
 tải termux bản github tại đây<br> https://github.com/termux/termux-app/releases/tag/v0.118.3 <br>
