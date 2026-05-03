@@ -17,7 +17,11 @@ tải src về giải nén ở dowload link :<br><br> https://drive.google.com/f
 <br><br>
 tải termux bản github tại đây<br> https://github.com/termux/termux-app/releases/tag/v0.118.3 <br>
 ai có rồi bỏ qua<br><br>
-vào termux lần lượt viết lệnh :<br>
+vào termux lần lượt viết lệnh :<br><br>
+
+termux-wake-lock <br>
+
+pkg update && pkg upgrade -y<br>
 <br>
 termux-setup-storage<br>
 ( cho phép dùng bộ nhớ cái này quan trọng lắm )<br>
