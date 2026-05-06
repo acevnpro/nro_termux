@@ -18,36 +18,41 @@ tải src về giải nén ở dowload link :<br><br> https://drive.google.com/f
 tải termux bản github tại đây<br> https://github.com/termux/termux-app/releases/tag/v0.118.3 <br>
 ai có rồi bỏ qua<br><br>
 vào termux lần lượt viết lệnh :<br><br>
+```
+termux-wake-lock
 
-termux-wake-lock <br>
+```
+ <br>
 
 pkg update && pkg upgrade -y<br>
 <br>
 termux-setup-storage<br>
 ( cho phép dùng bộ nhớ cái này quan trọng lắm )<br>
 <br>
-pkg install python wget -y<br>
+```
+pkg install python wget -y
+```
 <br>
-wget https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py<br>
+<br>
+```
+wget https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py
+```
+<br>
 
-hoặc curl -O https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py<br>
+hoặc<br>
+```
+curl -O https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py
+```
+<br>
 nếu wget lỗi !
 <br><br><br>
-viết mã python nro.py<br>
+viết mã<br>
+```
+python nro.py
+```
 <br>
-```
-pkg update
-pkg upgrade
-pkg install x11-repo
-pkg install termux-x11-nightly
-pkg install tur-repo
-pkg install pulseaudio
-pkg install proot-distro
-pkg install wget
-pkg install git
-```
+<br>
 
----  
 khi vào được app rồi thì chọn theo các số thứ tự <br>
 1 -> 2 (chọn đúng mục SrcVipByVanTuan_termux -> 3 -> 4 (chọn muc offline online tùy các bạn)-> 5 -> 6 ( bỏ qua 7 nếu có chữ ok ) -> 8 chọn 1 chuyển tab khác 9 chọn 1 ( chuyển tab vuốt từ bên trái phía trên sang nhẹ nhàng khéo léo như sờ lol là ra! <br>
 <br>
