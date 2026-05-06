@@ -35,6 +35,19 @@ nếu wget lỗi !
 <br><br><br>
 viết mã python nro.py<br>
 <br>
+```
+pkg update
+pkg upgrade
+pkg install x11-repo
+pkg install termux-x11-nightly
+pkg install tur-repo
+pkg install pulseaudio
+pkg install proot-distro
+pkg install wget
+pkg install git
+```
+
+---  
 khi vào được app rồi thì chọn theo các số thứ tự <br>
 1 -> 2 (chọn đúng mục SrcVipByVanTuan_termux -> 3 -> 4 (chọn muc offline online tùy các bạn)-> 5 -> 6 ( bỏ qua 7 nếu có chữ ok ) -> 8 chọn 1 chuyển tab khác 9 chọn 1 ( chuyển tab vuốt từ bên trái phía trên sang nhẹ nhàng khéo léo như sờ lol là ra! <br>
 <br>
