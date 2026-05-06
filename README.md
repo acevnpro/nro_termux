@@ -23,10 +23,15 @@ termux-wake-lock
 
 ```
  <br>
-
-pkg update && pkg upgrade -y<br>
+```
+pkg update && pkg upgrade -y
+```
 <br>
-termux-setup-storage<br>
+<br>
+```
+termux-setup-storage
+```
+<br>
 ( cho phép dùng bộ nhớ cái này quan trọng lắm )<br>
 <br>
 ```
