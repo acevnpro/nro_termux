@@ -42,7 +42,7 @@ pkg install python wget -y
 ```
 wget https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py
 ```
-<br><br>
+<br><br><br>
 
 hoặc<br>
 ```
@@ -51,7 +51,7 @@ curl -O https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py
 <br>
 nếu wget lỗi !
 <br><br><br>
-viết mã<br><br>
+viết mã<br><br><br>
 ```
 python nro.py
 ```
