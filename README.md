@@ -22,27 +22,27 @@ vào termux lần lượt viết lệnh :<br><br>
 termux-wake-lock
 
 ```
- <br>
+ <br><br>
 ```
 pkg update && pkg upgrade -y
 ```
-<br>
+<br><br>
 <br>
 ```
 termux-setup-storage
 ```
-<br>
+<br><br>
 ( cho phép dùng bộ nhớ cái này quan trọng lắm )<br>
-<br>
+<br><br>
 ```
 pkg install python wget -y
 ```
 <br>
-<br>
+<br><br>
 ```
 wget https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py
 ```
-<br>
+<br><br>
 
 hoặc<br>
 ```
@@ -51,11 +51,11 @@ curl -O https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py
 <br>
 nếu wget lỗi !
 <br><br><br>
-viết mã<br>
+viết mã<br><br>
 ```
 python nro.py
 ```
-<br>
+<br><br>
 <br>
 
 khi vào được app rồi thì chọn theo các số thứ tự <br>
