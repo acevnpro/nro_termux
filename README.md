@@ -37,12 +37,14 @@ termux-setup-storage
 ```
 pkg install python wget -y
 ```
-<br>
+
 <br><br>
+
 ```
 wget https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py
 ```
-<br><br><br>
+
+<br><br>
 
 hoặc<br>
 ```
