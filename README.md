@@ -1,3 +1,4 @@
+Markdown
 # 🐉 Dự án Cài Đặt và Chạy Server NRO trên Termux
 
 Chào mừng bạn đến với dự án setup Server Ngọc Rồng Online (NRO) bằng Python trên ứng dụng Termux. Dưới đây là hướng dẫn chi tiết từ A-Z để bạn có thể tự cài đặt và trải nghiệm game một mình hoặc cùng bạn bè!
@@ -16,8 +17,7 @@ Tham gia ngay các nhóm cộng đồng dưới đây để cùng thảo luận,
 
 ## ⚠️ Lưu Ý Quan Trọng (Về Ngrok & Cloudflare)
 
-> 💡 **Mẹo nhỏ:** Ở phiên bản mới, nếu sử dụng **Ngrok** thì tài khoản của bạn bắt buộc phải ép thẻ Visa để xác minh danh tính. 
-> 
+> 💡 **Mẹo nhỏ:** Ở phiên bản mới, nếu sử dụng **Ngrok** thì tài khoản của bạn bắt buộc phải ép thẻ Visa để xác minh danh tính.  
 > Tuy nhiên, web tạo tài khoản này hiện đã tích hợp **Cloudflare Free**, giúp bạn có thể bật thoải mái hoàn toàn miễn phí mà không cần xác minh thẻ phức tạp!
 
 ---
@@ -37,10 +37,10 @@ Trước khi tiến hành cài đặt, hãy tải đầy đủ các file cần t
 
 ## 🛠️ Các Bước Cài Đặt Trên Termux
 
-Mở ứng dụng Termux lên, sao chép và dán lần lượt các lệnh sau (bấm Enter sau mỗi block lệnh):
+Mở ứng dụng Termux lên, sao chép và dán lần lượt các lệnh sau (bấm Enter sau mỗi ô lệnh):
 
 ### 1. Giữ cho Termux luôn chạy ngầm
-
+```bash
 termux-wake-lock
 2. Cập nhật hệ thống Termux
 Bash
@@ -54,8 +54,6 @@ termux-setup-storage
 Bash
 pkg install python wget -y
 5. Tải file script vận hành Server
-Tải file nro.py về máy bằng lệnh:
-
 Bash
 wget [https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py](https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py)
 Nếu lệnh wget ở trên bị lỗi, hãy dùng lệnh curl thay thế dưới đây:
@@ -88,6 +86,3 @@ Cách chơi chung mạng Wifi: Để chia sẻ cho máy khác chơi cùng trong 
 Lưu ý khi đổi IP: Thỉnh thoảng modem Wifi sẽ tự động reset và đổi địa chỉ IP của máy bạn. Lúc này dữ liệu game của bạn không hề bị mất, bạn chỉ cần thực hiện lại từ Bước 4 trong app để cập nhật lại IP mới là có thể tiếp tục chơi bình thường!
 
 ❤️ Hãy cùng hoàn thiện khung chỉnh sửa chạy cho Termux, fix sạch lỗi và chia sẻ rộng rãi thành quả cho mọi người cùng trải nghiệm nhé! Chúc các bạn chơi game vui vẻ!
-
-```bash
-termux-wake-lock
