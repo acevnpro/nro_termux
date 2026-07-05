@@ -40,5 +40,54 @@ Trước khi tiến hành cài đặt, hãy tải đầy đủ các file cần t
 Mở ứng dụng Termux lên, sao chép và dán lần lượt các lệnh sau (bấm Enter sau mỗi block lệnh):
 
 ### 1. Giữ cho Termux luôn chạy ngầm
+
+termux-wake-lock
+2. Cập nhật hệ thống Termux
+Bash
+pkg update && pkg upgrade -y
+3. Cấp quyền truy cập bộ nhớ điện thoại (Bắt buộc)
+Bash
+termux-setup-storage
+🔴 LƯU Ý CỰC KỲ QUAN TRỌNG: Khi hệ thống hiển thị thông báo trên màn hình điện thoại, bạn phải bấm chọn Cho phép (Allow) thì Termux mới có thể đọc được file game đã giải nén trong máy.
+
+4. Cài đặt Python và gói Wget
+Bash
+pkg install python wget -y
+5. Tải file script vận hành Server
+Tải file nro.py về máy bằng lệnh:
+
+Bash
+wget [https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py](https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py)
+Nếu lệnh wget ở trên bị lỗi, hãy dùng lệnh curl thay thế dưới đây:
+
+Bash
+curl -O [https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py](https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py)
+6. Khởi chạy Tool quản lý
+Bash
+python nro.py
+🎮 Hướng Dẫn Thao Tác Trong Ứng Dụng
+Khi giao diện ứng dụng quản lý hiện lên, bạn tiến hành bấm chọn theo đúng thứ tự các con số sau để setup:
+
+Bước 1: Chọn 1 -> Chọn 2 (Hãy tìm và chọn chính xác mục SrcVipByVanTuan_termux).
+
+Bước 2: Chọn 3 -> Chọn 4 (Tại đây bạn có thể chọn mục Offline hoặc Online tùy thuộc vào nhu cầu).
+
+Bước 3: Chọn 5 -> Chọn 6 (Nếu hệ thống hiển thị chữ OK, bạn có thể bỏ qua bước số 7).
+
+Bước 4: Chọn 8 -> Chọn tiếp 1.
+
+Bước 5 (Mở tab mới): Chọn 9 -> Chọn 1.
+
+💡 Mẹo mở tab nhanh: Bạn hãy vuốt nhẹ nhàng từ cạnh bên trái phía trên màn hình sang phải để mở menu ẩn của Termux, sau đó chọn tạo Tab mới.
+
+📱 Hướng Dẫn Kết Nối Vào Game & Chơi Chung
+Vào game: Cài đặt và mở file game .apk nằm trong file zip được cung cấp sẵn là có thể vào chơi ngay.
+
+Cách chơi chung mạng Wifi: Để chia sẻ cho máy khác chơi cùng trong một mạng Wifi, bạn chỉ cần lấy địa chỉ IP của máy chủ (máy đang chạy server) rồi nhập vào bản game trên máy của bạn bè là xong.
+
+Lưu ý khi đổi IP: Thỉnh thoảng modem Wifi sẽ tự động reset và đổi địa chỉ IP của máy bạn. Lúc này dữ liệu game của bạn không hề bị mất, bạn chỉ cần thực hiện lại từ Bước 4 trong app để cập nhật lại IP mới là có thể tiếp tục chơi bình thường!
+
+❤️ Hãy cùng hoàn thiện khung chỉnh sửa chạy cho Termux, fix sạch lỗi và chia sẻ rộng rãi thành quả cho mọi người cùng trải nghiệm nhé! Chúc các bạn chơi game vui vẻ!
+
 ```bash
 termux-wake-lock
