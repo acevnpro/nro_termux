@@ -117,7 +117,8 @@ Khi giao diện ứng dụng quản lý hiện lên, bạn tiến hành bấm ch
 
 ## 📂 Các Bộ Source (SRC) Mở Rộng Khác
 
-Đối với các bộ SRC khác như SRC 02, 03, 04... thì quy trình cài đặt hoàn toàn tương tự. Tuy nhiên, bạn sẽ cần tải đúng phiên bản script `nro.py` tương ứng (Ví dụ: chạy `src_4` thì phải dùng file `nro4.py`).
+Đối với các bộ SRC khác như SRC 02, 03, 04... thì quy trình cài đặt hoàn toàn tương tự nhưng không cần giải nén SRC chỉ cần để trong thư mục download ĐT. Tuy nhiên, bạn sẽ cần tải đúng phiên bản script `nro.py` tương ứng (Ví dụ: chạy `src_4` thì phải dùng file `nro4.py`). và 2 bộ src này sẽ dùng chung 1 bản mod này https://drive.google.com/file/d/1K1bwBRhiyNLfEMuOo2Yujs2CGe9yMIip/view?usp=drive_link
+
 
 Dưới đây là link tải SRC mở rộng kèm lệnh tải file Python quản lý tương ứng:
 
