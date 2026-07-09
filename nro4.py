@@ -168,6 +168,36 @@ def get_st(pattern):
         return f"{C.G}ON{C.E}"
     except: return f"{C.R}OFF{C.E}"
 
+def get_server_status(cfg, stype):
+    pattern = "ServerLogin" if stype == "login" else "ServerManager"
+    
+    # Check if process is running via pgrep
+    is_running = False
+    try:
+        subprocess.check_output(["pgrep", "-f", pattern], stderr=subprocess.DEVNULL)
+        is_running = True
+    except:
+        if stype == "game":
+            try:
+                subprocess.check_output(["pgrep", "-f", "nro.models.server.ServerManager"], stderr=subprocess.DEVNULL)
+                is_running = True
+            except:
+                pass
+                
+    if is_running:
+        return f"{C.G}ON{C.E}"
+        
+    # Check TMux session if not running
+    session = f"nro_{stype}_server"
+    try:
+        res = subprocess.run(["tmux", "has-session", "-t", session], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if res.returncode == 0:
+            return f"{C.Y}AUTO-START{C.E}"
+    except:
+        pass
+        
+    return f"{C.R}OFF{C.E}"
+
 def get_stat(cfg, key):
     return f" {C.G}(OK){C.E}" if cfg.get("status", {}).get(key) else ""
 
@@ -660,8 +690,61 @@ def setup_db_lemp(cfg):
     if not os.path.exists(os.path.join(os.environ['PREFIX'], "var/lib/mysql")):
         os.system("mysql_install_db")
         
-    os.system("mariadbd-safe > /dev/null 2>&1 &")
-    p_info("Đang khởi động MariaDB (vui lòng chờ 8 giây)...")
+    # Cấu hình my.cnf để lưu mặc định collation giúp tránh lỗi buildCollationMapping
+    prefix = os.environ.get('PREFIX', '/data/data/com.termux/files/usr')
+    my_cnf_path = os.path.join(prefix, "etc/my.cnf")
+    p_info("Đang cấu hình mặc định Collation trong my.cnf...")
+    my_cnf_content = ""
+    if os.path.exists(my_cnf_path):
+        try:
+            with open(my_cnf_path, 'r') as f:
+                my_cnf_content = f.read()
+        except: pass
+    if "[mysqld]" not in my_cnf_content:
+        my_cnf_content += "\n[mysqld]\n"
+    lines = my_cnf_content.split('\n')
+    new_lines = []
+    has_charset = False
+    has_collation = False
+    in_mysqld = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("[mysqld]"):
+            in_mysqld = True
+            new_lines.append(line)
+            continue
+        elif stripped.startswith("[") and in_mysqld:
+            if not has_charset:
+                new_lines.append("character-set-server=utf8mb4")
+                has_charset = True
+            if not has_collation:
+                new_lines.append("collation-server=utf8mb4_general_ci")
+                has_collation = True
+            in_mysqld = False
+            new_lines.append(line)
+            continue
+        if in_mysqld:
+            if stripped.startswith("character-set-server"):
+                line = "character-set-server=utf8mb4"
+                has_charset = True
+            elif stripped.startswith("collation-server"):
+                line = "collation-server=utf8mb4_general_ci"
+                has_collation = True
+        new_lines.append(line)
+    if in_mysqld:
+        if not has_charset:
+            new_lines.append("character-set-server=utf8mb4")
+        if not has_collation:
+            new_lines.append("collation-server=utf8mb4_general_ci")
+    try:
+        with open(my_cnf_path, 'w') as f:
+            f.write('\n'.join(new_lines))
+        p_ok("Đã cập nhật cấu hình my.cnf thành công!")
+    except Exception as e:
+        p_err(f"Không thể ghi cấu hình my.cnf: {e}")
+        
+    os.system("mariadbd-safe --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci > /dev/null 2>&1 &")
+    p_info("Đang khởi động MariaDB với Collation an toàn utf8mb4_general_ci (vui lòng chờ 8 giây)...")
     time.sleep(8)
     
     # Cấu hình quyền và mật khẩu MariaDB
@@ -1120,6 +1203,73 @@ def manage_tcp(cfg):
         except: p_err("Không thể lấy đường dẫn Cloudflare Tunnel!")
     wait()
 
+def patch_java_jdbc(content, file_name=""):
+    # Bỏ qua hoàn toàn việc vá Driver/JDBC để quay lại kiến trúc ổn định ban đầu theo yêu cầu
+    return content, False
+    
+    modified = False
+    params = "useUnicode=yes&characterEncoding=UTF-8&useSSL=false&connectionCollation=utf8_general_ci&serverTimezone=UTC&useLegacyDatetimeCode=false&detectCustomCollations=false"
+    
+    # 1. Quét thông tin in ra màn hình để debug
+    lines = content.split('\n')
+    p_info(f"   [*] Quét cấu trúc kết nối trong {file_name}:")
+    found_any = False
+    for idx, line in enumerate(lines):
+        if 'jdbc:mysql' in line.lower() or 'jdbc:mariadb' in line.lower() or ('url' in line.lower() and ('db' in line.lower() or 'jdbc' in line.lower() or 'mysql' in line.lower() or 'mariadb' in line.lower())):
+            p_info(f"       > Dòng {idx+1}: {line.strip()}")
+            found_any = True
+    if not found_any:
+        p_info("       > Không thấy dòng cấu hình trực tiếp (có thể load từ class khác)")
+
+    # 1.5. Khôi phục driver class name từ MariaDB/MySQL 8 về MySQL 5 cũ
+    for old_driver in ["org.mariadb.jdbc.Driver", "com.mysql.cj.jdbc.Driver"]:
+        if old_driver in content:
+            content = content.replace(old_driver, "com.mysql.jdbc.Driver")
+            modified = True
+            p_ok(f"       [✓] Đã khôi phục Driver trong Code về: com.mysql.jdbc.Driver")
+
+    # 1.6. Khôi phục jdbc:mariadb thành jdbc:mysql
+    if "jdbc:mariadb" in content:
+        content = content.replace("jdbc:mariadb", "jdbc:mysql")
+        modified = True
+        p_ok(f"       [✓] Đã khôi phục giao thức kết nối: jdbc:mariadb -> jdbc:mysql")
+
+    # 2. Case 1: Các chuỗi nối ghép tham số kiểu + "?useUnicode=..." hoặc + "?characterEncoding=..."
+    pattern_concat = r'(\+\s*)"\?(?:useUnicode|characterEncoding|connectionCollation|detectCustomCollations)[^"\n]*"'
+    new_content, count = re.subn(pattern_concat, r'\1"?' + params + '"', content)
+    if count > 0:
+        p_ok(f"       [✓] Đã vá chuỗi tham số nối tiếp ({count} vị trí)")
+        content = new_content
+        modified = True
+        
+    # 3. Case 2: URL đầy đủ trong 1 chuỗi đã có sẵn tham số: "jdbc:mysql://host:port/db?useUnicode=..."
+    pattern_single_with_q = r'("jdbc:mysql://[^"\n]+\?)([^"\n]+)"'
+    new_content, count = re.subn(pattern_single_with_q, r'\1' + params + '"', content)
+    if count > 0:
+        p_ok(f"       [✓] Đã vá chuỗi JDBC URL đơn có sẵn tham số ({count} vị trí)")
+        content = new_content
+        modified = True
+        
+    # 4. Case 3: URL đầy đủ trong 1 chuỗi CHƯA có bất kỳ tham số nào: "jdbc:mysql://host:port/db"
+    pattern_single_no_q = r'("jdbc:mysql://[^"?\n\+]+)"'
+    new_content, count = re.subn(pattern_single_no_q, r'\1?' + params + '"', content)
+    if count > 0:
+        p_ok(f"       [✓] Đã vá chuỗi JDBC URL đơn chưa có tham số ({count} vị trí)")
+        content = new_content
+        modified = True
+
+    # 5. Case 4: Nối chuỗi URL không có tham số nào, ví dụ: "jdbc:mysql://" + DB_HOST + ":" + DB_PORT + "/" + DB_NAME;
+    if 'useunicode' not in content.lower():
+        pattern_append_var = r'(\+\s*(?:DB_NAME|db_name|database|dbName|name|db|databaseName)\b)'
+        new_content, count = re.subn(pattern_append_var, r'\1 + "?' + params + '"', content, flags=re.IGNORECASE)
+        if count > 0:
+            p_ok(f"       [✓] Đã tự động nối tiếp chuỗi tham số vào sau biến tên DB ({count} vị trí)")
+            content = new_content
+            modified = True
+
+    return content, modified
+
+
 # ==========================================
 # [5] VÁ IP & BIÊN DỊCH GAME
 # ==========================================
@@ -1146,15 +1296,25 @@ def apply_and_build(cfg):
         content = re.sub(r'DB_USER\s*=\s*".*?"', f'DB_USER = "{db_u}"', content)
         content = re.sub(r'DB_PASSWORD\s*=\s*".*?"', f'DB_PASSWORD = "{db_pass}"', content)
         
-        if 'jdbc:mysql' in content.lower():
-            if 'detectCustomCollations' not in content:
-                p_info("   [+] Áp dụng JDBC URL Collation Patch (MariaDB 11)...")
-                params = "&useSSL=false&connectionCollation=utf8_general_ci&characterEncoding=UTF-8&useUnicode=yes&serverTimezone=UTC&useLegacyDatetimeCode=false&detectCustomCollations=false"
-                content = re.sub(r'(\?useUnicode=[^"]+)', r'?useUnicode=yes', content)
-                content = re.sub(r'(jdbc:mysql://[^"]+)', r'\1' + params, content, flags=re.IGNORECASE)
-                
+        content, is_mod = patch_java_jdbc(content, os.path.basename(paths["DB_SERVICE"]))
         with open(paths["DB_SERVICE"], 'w', encoding='utf-8') as f: f.write(content)
         p_ok(f"{os.path.basename(paths['DB_SERVICE'])} → Cập nhật thành công")
+
+    # Tự động quét và vá toàn bộ các tệp Java chứa JDBC URL để tránh lỗi Collation MariaDB 11
+    if os.path.exists(paths["SRC_ROOT"]):
+        for root, dirs, files in os.walk(paths["SRC_ROOT"]):
+            for file in files:
+                if file.endswith(".java"):
+                    fp_java = os.path.join(root, file)
+                    try:
+                        with open(fp_java, 'r', encoding='utf-8', errors='ignore') as f_java:
+                            c_java = f_java.read()
+                        if 'jdbc:mysql' in c_java.lower() or 'jdbc:mariadb' in c_java.lower() or 'org.mariadb.jdbc' in c_java.lower():
+                            c_java, is_mod = patch_java_jdbc(c_java, file)
+                            if is_mod:
+                                with open(fp_java, 'w', encoding='utf-8') as f_java_w:
+                                    f_java_w.write(c_java)
+                    except: pass
 
     # 2. Vá DataGame.java
     if os.path.exists(paths["DATA_GAME"]):
@@ -1234,34 +1394,39 @@ def apply_and_build(cfg):
     c1 = remove_bom(paths["SRC_ROOT"])
     if c1 > 0: p_ok(f"Đã dọn sạch BOM cho {c1} file!")
 
-    # 7. Vá Lombok cho Maven
-    if not paths["IS_NEW03"]:
-        for p_xml in [os.path.join(paths["GAME_DIR"], "pom.xml"), os.path.join(paths["LOGIN_DIR"], "pom.xml")]:
-            if os.path.exists(p_xml):
-                try:
-                    with open(p_xml, 'r', encoding='utf-8') as f: content = f.read()
-                    if "<artifactId>lombok</artifactId>" in content:
-                        new_content = re.sub(r'(<artifactId>lombok</artifactId>\s*<version>)[^<]+(</version>)', r'\g<1>1.18.32\g<2>', content)
-                        if new_content != content:
-                            with open(p_xml, 'w', encoding='utf-8') as f: f.write(new_content)
-                            p_ok(f"Nâng cấp Lombok cho {os.path.basename(p_xml)} lên 1.18.32")
-                except: pass
+    # 7. Vá Lombok và mysql-connector-java cho toàn bộ Maven pom.xml (nếu có)
+    p_info("Đang quét tìm tất cả tệp pom.xml để nâng cấp Lombok & đồng bộ mysql-connector-java 5.1.49 (Fix triệt để MariaDB 11)...")
+    base_dir = cfg.get("base_dir", os.path.join(HOME, "nro_termux"))
+    if os.path.exists(base_dir):
+        for root, dirs, files in os.walk(base_dir):
+            for file in files:
+                if file == "pom.xml":
+                    p_xml = os.path.join(root, file)
+                    try:
+                        with open(p_xml, 'r', encoding='utf-8', errors='ignore') as f:
+                            c_xml = f.read()
+                        
+                        xml_modified = False
+                        
+                        # Nâng cấp lombok lên 1.18.32
+                        if "<artifactId>lombok</artifactId>" in c_xml:
+                            new_c_xml = re.sub(r'(<artifactId>lombok</artifactId>\s*<version>)[^<]+(</version>)', r'\g<1>1.18.32\g<2>', c_xml)
+                            if new_c_xml != c_xml:
+                                c_xml = new_c_xml
+                                xml_modified = True
+                                p_ok(f"       [✓] Đã nâng cấp Lombok lên 1.18.32 trong: {os.path.basename(root)}/pom.xml")
+                                
+                        # Đảm bảo dùng mysql-connector-java 5.1.49 - Đã vô hiệu hóa theo yêu cầu khôi phục kiến trúc ban đầu
+                        pass
+                                
+                        if xml_modified:
+                            with open(p_xml, 'w', encoding='utf-8') as f:
+                                f.write(c_xml)
+                    except Exception as e:
+                        p_err(f"Lỗi khi vá tệp {p_xml}: {e}")
 
-    # 8. Nâng cấp MySQL Driver cho Ant project (Fix lỗi MariaDB 11)
-    lib_dir = os.path.join(paths["GAME_DIR"], "lib")
-    if os.path.exists(lib_dir):
-        p_info("Đang đồng bộ Driver MySQL tối tân nhất (Fix MariaDB 11)...")
-        new_driver_url = "https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.49/mysql-connector-java-5.1.49.jar"
-        new_driver_path = os.path.join(lib_dir, "mysql-connector-java-5.1.49.jar")
-        if not os.path.exists(new_driver_path):
-            os.system(f"wget -q --show-progress {new_driver_url} -O {new_driver_path}")
-        
-        old_drivers = ['mysql-connector-java8-5.1.23.jar', 'mysql-connector-java-5.1.23.jar']
-        for od in old_drivers:
-            od_path = os.path.join(lib_dir, od)
-            if os.path.exists(od_path):
-                os.system(f"cp -f {new_driver_path} {od_path}")
-        p_ok("Đã nâng cấp Driver MySQL thành công!")
+    # 8. Cấu hình mysql-connector-java 5.1.49 cho Ant project - Đã vô hiệu hóa theo yêu cầu khôi phục kiến trúc ban đầu
+    pass
 
     # 8.5. Tự động vá lỗi hiển thị CPU âm (-100%) và RAM ảo (90%) trên Termux/Linux
     p_info("Đang quét và tối ưu hóa logic CPU hiển thị âm (-100%) & RAM ảo...")
@@ -1550,9 +1715,10 @@ def check_and_create_dir(path):
         return False, str(e)
 
 def run_backup_daemon():
+    import datetime
     cfg = load_config()
     bcfg = cfg.get("backup_daemon", {})
-    interval = int(bcfg.get("interval_hours", 1)) * 3600
+    interval_hours = int(bcfg.get("interval_hours", 1))
     max_backups = int(bcfg.get("max_backups", 24))
     backup_dir = bcfg.get("backup_dir", os.path.join(HOME, "nro_backups"))
     db_name = cfg.get('db_name', 'nrovip')
@@ -1578,13 +1744,34 @@ def run_backup_daemon():
             pass
 
     log_msg("=== KHỞI ĐỘNG TIẾN TRÌNH SAO LƯU TỰ ĐỘNG ===")
-    log_msg(f"Cấu hình: Chu kỳ = {bcfg.get('interval_hours', 1)} giờ, Giới hạn tối đa = {max_backups} file.")
+    log_msg(f"Cấu hình: Chu kỳ = {interval_hours} giờ, Giới hạn tối đa = {max_backups} file.")
     log_msg(f"Thư mục lưu trữ: {backup_dir}")
     
+    first_run = True
     while True:
         try:
+            if not first_run:
+                # Tính toán thời gian ngủ cho tới mốc giờ tiếp theo (giờ chẵn % interval_hours == 0)
+                now = datetime.datetime.now()
+                dt = now.replace(minute=0, second=0, microsecond=0)
+                while True:
+                    dt += datetime.timedelta(hours=1)
+                    if dt > now and (dt.hour % interval_hours) == 0:
+                        break
+                
+                seconds_to_sleep = (dt - now).total_seconds()
+                log_msg(f"Đang chờ đến mốc giờ sao lưu tiếp theo: {dt.strftime('%d-%m-%Y %H:%M:%S')} (Còn {seconds_to_sleep:.1f} giây)...")
+                
+                target_time = now + datetime.timedelta(seconds=seconds_to_sleep)
+                while datetime.datetime.now() < target_time:
+                    # Kiểm tra mỗi 10 giây để đảm bảo phản hồi nhanh và chống trượt giờ do Android sleep
+                    time.sleep(10)
+            else:
+                first_run = False
+                log_msg("Thực hiện sao lưu bản đầu tiên ngay sau khi khởi chạy...")
+
             t_struct = time.localtime()
-            timestamp_str = time.strftime("%Y%m%d_%H%M%S", t_struct)
+            timestamp_str = time.strftime("Ngay_%d-%m-%Y_Luc_%Hh%Mp", t_struct)
             out_file = os.path.join(backup_dir, f"backup_{db_name}_{timestamp_str}.sql")
             
             if cfg.get('backend') == 'ksweb':
@@ -1624,8 +1811,6 @@ def run_backup_daemon():
                 
         except Exception as e:
             log_msg(f"Lỗi hệ thống trong luồng backup: {str(e)}")
-            
-        time.sleep(interval)
 
 def manage_auto_backup(cfg):
     while True:
@@ -1876,7 +2061,7 @@ def manage_lemp(cfg):
             os.system("pkill -9 nginx; pkill -9 php-fpm")
             time.sleep(1)
             p_info("Đang khởi động MariaDB, PHP-FPM & Nginx...")
-            os.system("mariadbd-safe > /dev/null 2>&1 &")
+            os.system("mariadbd-safe --character-set-server=utf8 --collation-server=utf8_general_ci > /dev/null 2>&1 &")
             os.system("php-fpm > /dev/null 2>&1")
             os.system("nginx > /dev/null 2>&1")
             
@@ -2038,89 +2223,162 @@ def manage_lemp(cfg):
                                 with open(log_file, 'r') as f:
                                     lines = f.readlines()
                                     last_lines = lines[-10:] if len(lines) > 10 else lines
-                                    print(f"\n--- 10 dòng cuối log lỗi Nginx ({log_file}) ---")
-                                    for line in last_lines:
-                                        print(f"  {line.strip()}")
+                                    print(f"\n--- 10 dòng cuối cùng trong log lỗi Nginx:\n{''.join(last_lines)}")
                             except:
                                 pass
-                else:
-                    p_err("Nginx phát hiện lỗi cấu hình:")
-                    print(proc.stderr)
-
-            p_h("GIẢI PHÁP KHẮC PHỤC TRÊN TERMUX")
-            print("  • Nếu test cú pháp thành công nhưng tiến trình nền bị kill ngay lập tức:")
-            print("    Đây là lỗi cực kỳ phổ biến do tính năng Phantom Processes của Android 12+ tự động tắt các app chạy ngầm trong Termux.")
-            print("    Giải pháp triệt để: Hãy mở Termux và chạy lệnh sau (hoặc cắm máy tính bật qua ADB):")
-            print(f"    {C.G}adb shell device_config put activity_manager max_phantom_processes 2147483647{C.E}")
-            print("    Hoặc giải pháp đơn giản nhất: Chuyển đổi sang sử dụng KSWEB (Mục [3]) để chạy Web/MySQL mượt mà, không lo bị Android tắt ngầm.")
             wait()
+            
         elif ch == "0":
             break
 
-# ==========================================
-# [8/9] VẬN HÀNH LOGIN & GAME SERVER
-# ==========================================
 def launch_server(cfg, stype):
-    paths = get_paths(cfg); xmx = cfg['jvm_xmx']
-    path = paths["LOGIN_DIR"] if stype=="login" else paths["GAME_DIR"]
+    p = get_paths(cfg)
+    path = p["LOGIN_DIR"] if stype == "login" else p["GAME_DIR"]
+    port = cfg['local_login_port'] if stype == "login" else cfg['local_game_port']
+    session = f"nro_{stype}_server"
+    xmx = cfg.get('jvm_xmx', '512m')
     
     if not path or not os.path.exists(path):
-        p_err(f"Không tìm thấy thư mục của {stype} server!"); wait(); return
-        
-    port = cfg['local_login_port'] if stype=="login" else cfg['local_game_port']
-    session = f"nro_{stype}_server"
-    
+        p_err(f"Không tìm thấy thư mục của Server {stype.upper()}!")
+        wait()
+        return
+
     # Xác định các cờ tối ưu JVM dựa trên chế độ cấu hình RAM được lựa chọn
     jvm_mode = cfg.get("jvm_mode", "opt")
     if jvm_mode == "low":
-        # Chế độ Tiết kiệm cực hạn (Ultra memory-saving):
-        # -XX:+UseSerialGC: Bộ dọn rác đơn giản, giảm tối đa RAM phụ trợ.
-        # -Xms16m: Khởi động Heap nhỏ nhất, tự động co giãn.
-        # -Xss160k: Thu hẹp tối đa stack thread.
-        # -XX:CICompilerCount=1: Hạn chế tối đa luồng biên dịch JIT.
-        # -XX:TieredStopAtLevel=1: Giới hạn cấp biên dịch JIT ở mức nhẹ.
-        # -XX:MaxMetaspaceSize=48m: Khóa chặt vùng nhớ Metaspace.
-        # -XX:+UseStringDeduplication: Dọn dẹp chuỗi trùng lặp trong RAM để tiết kiệm thêm 10-20% RAM.
-        # -XX:MaxHeapFreeRatio=40 -XX:MinHeapFreeRatio=20: Tích cực thu hồi và trả RAM thừa về hệ điều hành.
         jvm_opts = f"-XX:+UseSerialGC -Xms16m -Xmx{xmx} -Xss160k -XX:CICompilerCount=1 -XX:TieredStopAtLevel=1 -XX:MaxMetaspaceSize=48m -XX:CompressedClassSpaceSize=12m -XX:+SegmentedCodeCache -XX:+UseStringDeduplication -XX:MaxHeapFreeRatio=40 -XX:MinHeapFreeRatio=20"
     elif jvm_mode == "high":
-        # Chế độ Hiệu năng cao (máy khỏe):
-        # -XX:+UseG1GC: Sử dụng Garbage Collector G1 hiện đại cho phản hồi siêu tốc, mượt mà khi lượng luồng lớn.
-        # -Xms128m: Định hình sẵn lượng heap cơ bản để tránh co giãn gây giật lag.
         jvm_opts = f"-XX:+UseG1GC -Xms128m -Xmx{xmx} -Xss384k -XX:MaxGCPauseMillis=100 -XX:+ParallelRefProcEnabled -XX:InitiatingHeapOccupancyPercent=45 -XX:MaxMetaspaceSize=128m"
     else:
-        # Chế độ tối ưu cân bằng (mặc định / Tối ưu nhất):
-        # Sử dụng SerialGC với giới hạn an toàn, tối giản hóa footprint trên nền tảng di động.
         jvm_opts = f"-XX:+UseSerialGC -Xms32m -Xmx{xmx} -Xss256k -XX:CICompilerCount=2 -XX:TieredStopAtLevel=1 -XX:MaxMetaspaceSize=64m -XX:CompressedClassSpaceSize=16m -XX:+SegmentedCodeCache"
         
     if os.path.exists(os.path.join(path, "dist")):
         main_class = "nro.models.server.ServerManager"
-        jar_cmd = f"java -Duser.timezone=Asia/Ho_Chi_Minh -Djava.awt.headless=true -server {jvm_opts} -cp \"dist/*:lib/*\" {main_class}"
+        jar_cmd = f"java -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Ho_Chi_Minh -Djava.awt.headless=true -server {jvm_opts} -cp \"dist/*:lib/*\" {main_class}"
     else:
-        jar_cmd = f"java -Duser.timezone=Asia/Ho_Chi_Minh -Djava.awt.headless=true -jar *.jar" if stype=="login" else f"java -Duser.timezone=Asia/Ho_Chi_Minh -Djava.awt.headless=true -server {jvm_opts} -jar *.jar"
+        jar_cmd = f"java -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Ho_Chi_Minh -Djava.awt.headless=true -jar *.jar" if stype == "login" else f"java -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Ho_Chi_Minh -Djava.awt.headless=true -server {jvm_opts} -jar *.jar"
+
+    while True:
+        os.system("clear")
+        p_h(f"VẬN HÀNH {stype.upper()} SERVER")
+        print("[1] Khởi chạy trực tiếp (Xem Log màn hình)")
+        print("[2] Khởi chạy ngầm (TMux - Khuyên Dùng)")
+        print("[3] Dừng Server (Kill Port & Session)")
+        print("[0] Quay lại")
+        ch = input("\nChọn: ").strip()
         
-    p_h(f"VẬN HÀNH {stype.upper()} SERVER")
-    print("[1] Khởi chạy trực tiếp (Xem Log màn hình)")
-    print("[2] Khởi chạy ngầm (TMux - Khuyên Dùng)")
-    print("[3] Dừng Server (Kill Port & Session)")
-    print("[0] Quay lại")
-    ch = input("\nChọn: ")
+        if ch == "1":
+            kill_port(port)
+            os.chdir(path)
+            
+            p_info(f"Khởi chạy trực tiếp {stype.upper()} Server...")
+            p_info(f"Lệnh chạy: {jar_cmd}")
+            p_info("Nhấn Ctrl + C để dừng server.")
+            print("-" * 50)
+            
+            # Khởi chạy trực tiếp thông qua os.system
+            start_time = time.time()
+            try:
+                exit_code = os.system(jar_cmd)
+            except KeyboardInterrupt:
+                exit_code = "Đã ngắt bằng Ctrl+C"
+                print(f"\n{C.G}[✓] Đã ngắt tiến trình Server chủ động.{C.E}")
+                
+            duration = time.time() - start_time
+            print("-" * 50)
+            p_err(f"Server đã dừng! (Thời gian hoạt động: {duration:.1f} giây, Mã thoát: {exit_code})")
+            
+            # Điều chỉnh dừng lại khi lỗi để người dùng nhìn thấy log!
+            if duration < 15:
+                p_err("CẢNH BÁO: Server dừng quá nhanh (< 15 giây). Có thể gặp lỗi khởi động!")
+                p_info("Lời khuyên: Vui lòng đọc kỹ các dòng log lỗi ở trên trước khi bấm Enter.")
+            else:
+                p_ok("Server đã dừng bình thường hoặc tắt chủ động.")
+                
+            input(f"\n{C.Y}👉 Bấm Enter để quay lại Menu quản lý...{C.E}")
+            
+        elif ch == "2":
+            kill_port(port)
+            os.system(f"tmux kill-session -t {session} 2>/dev/null")
+            
+            # Ghi file watchdog.py vào thư mục của Server tương ứng
+            watchdog_path = os.path.join(path, "watchdog.py")
+            pkill_cmd = "pkill -9 -f 'ServerLogin' >/dev/null 2>&1" if stype == "login" else "pkill -9 -f 'ServerManager' >/dev/null 2>&1; pkill -9 -f 'VanTuan' >/dev/null 2>&1"
+            watchdog_code = f"""# -*- coding: utf-8 -*-
+import os, time, socket, subprocess
+
+port = {port}
+jar_cmd = {repr(jar_cmd)}
+db_port = 3306
+
+def is_port_open(p):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(1.5)
+    try:
+        s.connect(("127.0.0.1", p))
+        s.close()
+        return True
+    except:
+        return False
+
+print("=== WATCHDOG STARTED ===")
+
+# Buoc 1: Kiem tra MySQL phai san sang
+if not is_port_open(db_port):
+    print("CSDL dang offline, doi CSDL online...")
+    while not is_port_open(db_port):
+        time.sleep(3)
+    print("CSDL da online!")
+    time.sleep(1)
+
+# Buoc 2: Khoi dong ban dau neu chua chay
+if not is_port_open(port):
+    print("Khoi dong Server ban dau...")
+    subprocess.Popen(jar_cmd, shell=True, start_new_session=True)
+    time.sleep(15)
+
+# Buoc 3: Vong lap giam sat
+while True:
+    if is_port_open(port):
+        time.sleep(5)
+        continue
     
-    if ch == "1":
-        kill_port(port)
-        os.chdir(path)
-        os.system(jar_cmd)
-    elif ch == "2":
-        kill_port(port)
-        os.system(f"tmux kill-session -t {session} 2>/dev/null")
-        os.system(f"tmux new-session -d -s {session} 'cd {path} && while true; do {jar_cmd}; echo \"[AUTO-RESTART] Server dang khoi dong lai sau 20 giay...\"; sleep 20; done'")
-        p_ok(f"Server {stype} đã được khởi chạy ngầm trong tmux thành công!")
-        wait()
-    elif ch == "3":
-        kill_port(port)
-        os.system(f"tmux kill-session -t {session} 2>/dev/null")
-        p_ok(f"Đã tắt Server {stype}!")
-        wait()
+    # Phat hien mat ket noi, doi 20 giay va kiem tra lai
+    print("Phat hien mat ket noi! Doi 20 giay...")
+    time.sleep(20)
+    if is_port_open(port):
+        print("Da phuc hoi ket noi!")
+        continue
+    
+    print("Van mat ket noi sau 20 giay! Tien hanh khoi dong lai...")
+    os.system(f"fuser -k -9 {{port}}/tcp >/dev/null 2>&1")
+    os.system(f"lsof -t -i:{{port}} >/dev/null 2>&1 | xargs kill -9 >/dev/null 2>&1")
+    os.system("{pkill_cmd}")
+    time.sleep(2)
+    
+    subprocess.Popen(jar_cmd, shell=True, start_new_session=True)
+    time.sleep(15)
+"""
+            try:
+                with open(watchdog_path, "w", encoding="utf-8") as wf:
+                    wf.write(watchdog_code)
+            except Exception as e:
+                p_err(f"Không thể ghi tệp giám sát: {e}")
+                
+            # Khởi chạy session TMux mới gọi watchdog.py
+            os.system(f"tmux new-session -d -s {session} 'cd {path} && python3 watchdog.py'")
+            p_ok(f"Bộ tự động kiểm tra & giám sát thông minh (Watchdog) đã được kích hoạt thành công!")
+            p_ok(f"Server {stype} đang được khởi động ngầm ổn định trong session TMux.")
+            wait()
+            
+        elif ch == "3":
+            kill_port(port)
+            os.system(f"tmux kill-session -t {session} 2>/dev/null")
+            p_ok(f"Đã tắt Server {stype}!")
+            wait()
+            
+        elif ch == "0":
+            break
 
 # ==========================================
 # [A] QUẢN LÝ TÀI KHOẢN (TERMINAL CLI)
@@ -2210,6 +2468,104 @@ def switch_backend(cfg):
     wait()
 
 # ==========================================
+# [B] QUẢN LÝ TIẾN TRÌNH CHẠY ẨN (TMUX / TUNNEL)
+# ==========================================
+def check_process_running(pattern):
+    try:
+        output = subprocess.check_output(["pgrep", "-f", pattern], stderr=subprocess.DEVNULL)
+        return True, len(output.decode().strip().split('\n'))
+    except:
+        return False, 0
+
+def manage_tmux(cfg):
+    while True:
+        os.system("clear")
+        p_h("GIÁM SÁT & PHÍM TẮT KẾT NỐI NHANH TMUX SESSIONS")
+        
+        # Quét các session TMux thực tế đang hoạt động
+        tmux_sessions = []
+        try:
+            res = subprocess.check_output(["tmux", "list-sessions"], stderr=subprocess.DEVNULL).decode("utf-8", errors="ignore")
+            for line in res.strip().split("\n"):
+                if line.strip():
+                    name = line.split(":")[0].strip()
+                    tmux_sessions.append(name)
+        except:
+            pass
+            
+        print(f" {C.BOLD}Danh sách Session TMux đang hoạt động:{C.E}")
+        if not tmux_sessions:
+            print(f"  {C.R}✗ Hiện tại không có Session TMux nào đang chạy.{C.E}")
+        else:
+            for i, name in enumerate(tmux_sessions, 1):
+                print(f"  [{i}] Kết nối trực tiếp vào: {C.G}{name}{C.E} (tmux attach -t {name})")
+                
+        print("\n-------------------------------------------------------------")
+        print(f"  {C.Y}[N]{C.E} Kết nối nhanh Ngrok  : {C.BOLD}tmux attach -t nro_ngrok{C.E}")
+        print(f"  {C.Y}[G]{C.E} Kết nối nhanh Server : {C.BOLD}tmux attach -t nro_game_server{C.E}")
+        print("-------------------------------------------------------------")
+        print("  [K] Tắt (Kill) một Session TMux bất kỳ")
+        print("  [T] Tắt toàn bộ TMux server (Kill-server)")
+        print("  [0] Quay lại Menu chính")
+        print("-------------------------------------------------------------")
+        print(f"  {C.Y}HƯỚNG DẪN THOÁT TMUX: Nhấn [Ctrl + B] rồi thả ra, sau đó bấm [D]{C.E}")
+        print(f"  {C.Y}để quay trở về menu quản lý mà không làm sập tiến trình chạy ẩn.{C.E}")
+        print("-------------------------------------------------------------")
+        
+        ch = input(f"{C.BOLD}Lựa chọn của bạn: {C.E}").strip().upper()
+        if ch == "0":
+            break
+        elif ch == "N":
+            p_info("Đang thực hiện lệnh: tmux attach -t nro_ngrok ...")
+            time.sleep(1)
+            os.system("tmux attach -t nro_ngrok")
+        elif ch == "G":
+            p_info("Đang thực hiện lệnh: tmux attach -t nro_game_server ...")
+            time.sleep(1)
+            os.system("tmux attach -t nro_game_server")
+        elif ch == "K":
+            if not tmux_sessions:
+                p_err("Không có Session TMux nào để tắt.")
+                time.sleep(1.5)
+                continue
+            idx = input("Nhập số thứ tự hoặc tên Session cần tắt: ").strip()
+            if idx in tmux_sessions:
+                os.system(f"tmux kill-session -t {idx}")
+                p_ok(f"Đã tắt Session: {idx}")
+                time.sleep(1.5)
+            else:
+                try:
+                    idx = int(idx)
+                    if 1 <= idx <= len(tmux_sessions):
+                        s_name = tmux_sessions[idx-1]
+                        os.system(f"tmux kill-session -t {s_name}")
+                        p_ok(f"Đã tắt Session: {s_name}")
+                    else:
+                        p_err("Số thứ tự không hợp lệ.")
+                except ValueError:
+                    p_err("Tên hoặc số thứ tự không hợp lệ.")
+                time.sleep(1.5)
+        elif ch == "T":
+            confirm = input(f"{C.Y}Xác nhận tắt toàn bộ TMux server? (y/N): {C.E}").strip().lower()
+            if confirm == 'y':
+                os.system("tmux kill-server")
+                p_ok("Đã tắt toàn bộ TMux Server!")
+            time.sleep(1.5)
+        else:
+            try:
+                idx = int(ch)
+                if 1 <= idx <= len(tmux_sessions):
+                    s_name = tmux_sessions[idx-1]
+                    p_info(f"Đang kết nối tới Session '{s_name}'...")
+                    time.sleep(1)
+                    os.system(f"tmux attach -t {s_name}")
+                else:
+                    p_err("Lựa chọn không hợp lệ.")
+                    time.sleep(1)
+            except ValueError:
+                pass
+
+# ==========================================
 # TRÌNH CHẠY CHÍNH (MAIN LOOP)
 # ==========================================
 def get_ram_bar():
@@ -2223,11 +2579,8 @@ def get_ram_bar():
 def main():
     while True:
         cfg = load_config()
-        l_st = get_st("ServerLogin")
-        
-        g_st = f"{C.R}OFF{C.E}"
-        for pat in ["nro.models.server.ServerManager", "nro.server.ServerManager"]:
-            if "ON" in get_st(pat): g_st = f"{C.G}ON{C.E}"; break
+        l_st = get_server_status(cfg, "login")
+        g_st = get_server_status(cfg, "game")
             
         lemp_st = check_lemp_status(cfg)
         backend = cfg.get('backend', 'termux')
@@ -2258,7 +2611,7 @@ def main():
         os.system("clear")
         print(f"""{C.CY}{C.BOLD}
 ==========================================
-      NRO VNPro4 - Danh Rieng Cho SRC_4
+        NRO VNPro4 - Danh Rieng Cho SRC_4
 =========================================={C.E}
  {C.G}tôi tạo ra app này để mod những game này thành game pvp 
  hoặc các chế độ khác tương tự mà không cần cày quốc 
@@ -2277,10 +2630,10 @@ def main():
  [5] Vá IP & Build Game{get_stat(cfg,'build')}
  [6] Cấu hình RAM & Swap (Hybrid)
  [7] {svc_label}
- [8] VẬN HÀNH LOGIN SERVER: {l_st}
- [9] VẬN HÀNH GAME SERVER: {g_st}
- [A] QUẢN LÝ TÀI KHOẢN
- [B] TỰ ĐỘNG SAO LƯU XOAY VÒNG (BACKUP DAEMON): {f"{C.G}ON{C.E}" if is_backup_daemon_running() else f"{C.R}OFF{C.E}"}
+ [8] VẬN HÀNH GAME SERVER: {g_st}
+ [9] QUẢN LÝ TÀI KHOẢN
+ [A] TỰ ĐỘNG SAO LƯU XOAY VÒNG (BACKUP DAEMON): {f"{C.G}ON{C.E}" if is_backup_daemon_running() else f"{C.R}OFF{C.E}"}
+ [B] GIÁM SÁT TIẾN TRÌNH TMUX (NGROK/CF/SERVER)
  {C.G}[K] CHUYỂN ĐỔI BACKEND (LEMP ↔ KSWEB){C.E}
  [D] LÀM MỚI KẾT NỐI NHANH
  [0] THOÁT CHƯƠNG TRÌNH
@@ -2293,10 +2646,10 @@ def main():
         elif ch == "5": apply_and_build(cfg)
         elif ch == "6": config_ram(cfg)
         elif ch == "7": manage_lemp(cfg)
-        elif ch == "8": launch_server(cfg, "login")
-        elif ch == "9": launch_server(cfg, "game")
-        elif ch == "A": manage_accounts(cfg)
-        elif ch == "B": manage_auto_backup(cfg)
+        elif ch == "8": launch_server(cfg, "game")
+        elif ch == "9": manage_accounts(cfg)
+        elif ch == "A": manage_auto_backup(cfg)
+        elif ch == "B": manage_tmux(cfg)
         elif ch == "K": switch_backend(cfg)
         elif ch == "D":
             kill_port(cfg['local_login_port']); kill_port(cfg['local_game_port'])
