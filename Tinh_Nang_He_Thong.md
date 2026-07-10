@@ -51,9 +51,9 @@
 termux-setup-storage
 
 # 2. Tải file nro4.py về thư mục Home (~/)
-```bash
+
 curl -LO https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro4.py
-```
+
 
 # 3. Chạy kịch bản
 python nro4.py
