@@ -116,6 +116,8 @@ Khi giao diện ứng dụng quản lý hiện lên, bạn tiến hành bấm ch
 * **Bước 8:** Chọn `8` -> Chọn tiếp `1` để khởi chạy trực tiếp. Hoặc bạn có thể chọn mục `2` để chạy ẩn. Tuy nhiên nếu là lần đầu tiên setup, bạn nên chọn `1` để dễ dàng quan sát xem hệ thống có báo lỗi gì không. Nếu mọi thứ ổn định, lần sau có thể tắt đi và chọn 2 chạy ẩn ( lưu ý một số SRC khác không có mục này vì nó không cần )
 * **Bước 9 (Mở tab mới) :** Chọn `9` hoặc 8 đối với các src khác -> Chọn tiếp `1` tương tự như ở mục số 8. ( lưu ý nếu chạy ẩn thì không cần bật tab mới và tôi khuyên dùng chạy ẩn để treo SV vì nó có chế độ tự động chạy lại SV khi bị sập hoặc bảo trì hàng ngày )
 
+* Đó là các bước để khởi chạy server thông thường vẫn còn những công cụ khác app thuần tiếng Việt các bạn tự khám phá nhé
+
 > 💡 **Mẹo mở tab ẩn nhanh:** Ấn giữ và vuốt nhẹ nhàng từ cạnh bên trái phía trên màn hình sang phải để mở menu ẩn của Termux, sau đó bấm chọn tạo Tab mới (New Session).
 
 ---
