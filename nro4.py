@@ -162,12 +162,6 @@ def kill_port(port):
         os.system("pkill -9 -f 'VanTuan' 2>/dev/null")
         os.system("pkill -9 -f 'ServerManager' 2>/dev/null")
 
-def get_st(pattern):
-    try:
-        subprocess.check_output(["pgrep", "-f", pattern], stderr=subprocess.DEVNULL)
-        return f"{C.G}ON{C.E}"
-    except: return f"{C.R}OFF{C.E}"
-
 def get_server_status(cfg, stype):
     pattern = "ServerLogin" if stype == "login" else "ServerManager"
     
@@ -690,61 +684,8 @@ def setup_db_lemp(cfg):
     if not os.path.exists(os.path.join(os.environ['PREFIX'], "var/lib/mysql")):
         os.system("mysql_install_db")
         
-    # Cấu hình my.cnf để lưu mặc định collation giúp tránh lỗi buildCollationMapping
-    prefix = os.environ.get('PREFIX', '/data/data/com.termux/files/usr')
-    my_cnf_path = os.path.join(prefix, "etc/my.cnf")
-    p_info("Đang cấu hình mặc định Collation trong my.cnf...")
-    my_cnf_content = ""
-    if os.path.exists(my_cnf_path):
-        try:
-            with open(my_cnf_path, 'r') as f:
-                my_cnf_content = f.read()
-        except: pass
-    if "[mysqld]" not in my_cnf_content:
-        my_cnf_content += "\n[mysqld]\n"
-    lines = my_cnf_content.split('\n')
-    new_lines = []
-    has_charset = False
-    has_collation = False
-    in_mysqld = False
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith("[mysqld]"):
-            in_mysqld = True
-            new_lines.append(line)
-            continue
-        elif stripped.startswith("[") and in_mysqld:
-            if not has_charset:
-                new_lines.append("character-set-server=utf8mb4")
-                has_charset = True
-            if not has_collation:
-                new_lines.append("collation-server=utf8mb4_general_ci")
-                has_collation = True
-            in_mysqld = False
-            new_lines.append(line)
-            continue
-        if in_mysqld:
-            if stripped.startswith("character-set-server"):
-                line = "character-set-server=utf8mb4"
-                has_charset = True
-            elif stripped.startswith("collation-server"):
-                line = "collation-server=utf8mb4_general_ci"
-                has_collation = True
-        new_lines.append(line)
-    if in_mysqld:
-        if not has_charset:
-            new_lines.append("character-set-server=utf8mb4")
-        if not has_collation:
-            new_lines.append("collation-server=utf8mb4_general_ci")
-    try:
-        with open(my_cnf_path, 'w') as f:
-            f.write('\n'.join(new_lines))
-        p_ok("Đã cập nhật cấu hình my.cnf thành công!")
-    except Exception as e:
-        p_err(f"Không thể ghi cấu hình my.cnf: {e}")
-        
-    os.system("mariadbd-safe --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci > /dev/null 2>&1 &")
-    p_info("Đang khởi động MariaDB với Collation an toàn utf8mb4_general_ci (vui lòng chờ 8 giây)...")
+    os.system("mariadbd-safe > /dev/null 2>&1 &")
+    p_info("Đang khởi động MariaDB (vui lòng chờ 8 giây)...")
     time.sleep(8)
     
     # Cấu hình quyền và mật khẩu MariaDB
@@ -1203,73 +1144,6 @@ def manage_tcp(cfg):
         except: p_err("Không thể lấy đường dẫn Cloudflare Tunnel!")
     wait()
 
-def patch_java_jdbc(content, file_name=""):
-    # Bỏ qua hoàn toàn việc vá Driver/JDBC để quay lại kiến trúc ổn định ban đầu theo yêu cầu
-    return content, False
-    
-    modified = False
-    params = "useUnicode=yes&characterEncoding=UTF-8&useSSL=false&connectionCollation=utf8_general_ci&serverTimezone=UTC&useLegacyDatetimeCode=false&detectCustomCollations=false"
-    
-    # 1. Quét thông tin in ra màn hình để debug
-    lines = content.split('\n')
-    p_info(f"   [*] Quét cấu trúc kết nối trong {file_name}:")
-    found_any = False
-    for idx, line in enumerate(lines):
-        if 'jdbc:mysql' in line.lower() or 'jdbc:mariadb' in line.lower() or ('url' in line.lower() and ('db' in line.lower() or 'jdbc' in line.lower() or 'mysql' in line.lower() or 'mariadb' in line.lower())):
-            p_info(f"       > Dòng {idx+1}: {line.strip()}")
-            found_any = True
-    if not found_any:
-        p_info("       > Không thấy dòng cấu hình trực tiếp (có thể load từ class khác)")
-
-    # 1.5. Khôi phục driver class name từ MariaDB/MySQL 8 về MySQL 5 cũ
-    for old_driver in ["org.mariadb.jdbc.Driver", "com.mysql.cj.jdbc.Driver"]:
-        if old_driver in content:
-            content = content.replace(old_driver, "com.mysql.jdbc.Driver")
-            modified = True
-            p_ok(f"       [✓] Đã khôi phục Driver trong Code về: com.mysql.jdbc.Driver")
-
-    # 1.6. Khôi phục jdbc:mariadb thành jdbc:mysql
-    if "jdbc:mariadb" in content:
-        content = content.replace("jdbc:mariadb", "jdbc:mysql")
-        modified = True
-        p_ok(f"       [✓] Đã khôi phục giao thức kết nối: jdbc:mariadb -> jdbc:mysql")
-
-    # 2. Case 1: Các chuỗi nối ghép tham số kiểu + "?useUnicode=..." hoặc + "?characterEncoding=..."
-    pattern_concat = r'(\+\s*)"\?(?:useUnicode|characterEncoding|connectionCollation|detectCustomCollations)[^"\n]*"'
-    new_content, count = re.subn(pattern_concat, r'\1"?' + params + '"', content)
-    if count > 0:
-        p_ok(f"       [✓] Đã vá chuỗi tham số nối tiếp ({count} vị trí)")
-        content = new_content
-        modified = True
-        
-    # 3. Case 2: URL đầy đủ trong 1 chuỗi đã có sẵn tham số: "jdbc:mysql://host:port/db?useUnicode=..."
-    pattern_single_with_q = r'("jdbc:mysql://[^"\n]+\?)([^"\n]+)"'
-    new_content, count = re.subn(pattern_single_with_q, r'\1' + params + '"', content)
-    if count > 0:
-        p_ok(f"       [✓] Đã vá chuỗi JDBC URL đơn có sẵn tham số ({count} vị trí)")
-        content = new_content
-        modified = True
-        
-    # 4. Case 3: URL đầy đủ trong 1 chuỗi CHƯA có bất kỳ tham số nào: "jdbc:mysql://host:port/db"
-    pattern_single_no_q = r'("jdbc:mysql://[^"?\n\+]+)"'
-    new_content, count = re.subn(pattern_single_no_q, r'\1?' + params + '"', content)
-    if count > 0:
-        p_ok(f"       [✓] Đã vá chuỗi JDBC URL đơn chưa có tham số ({count} vị trí)")
-        content = new_content
-        modified = True
-
-    # 5. Case 4: Nối chuỗi URL không có tham số nào, ví dụ: "jdbc:mysql://" + DB_HOST + ":" + DB_PORT + "/" + DB_NAME;
-    if 'useunicode' not in content.lower():
-        pattern_append_var = r'(\+\s*(?:DB_NAME|db_name|database|dbName|name|db|databaseName)\b)'
-        new_content, count = re.subn(pattern_append_var, r'\1 + "?' + params + '"', content, flags=re.IGNORECASE)
-        if count > 0:
-            p_ok(f"       [✓] Đã tự động nối tiếp chuỗi tham số vào sau biến tên DB ({count} vị trí)")
-            content = new_content
-            modified = True
-
-    return content, modified
-
-
 # ==========================================
 # [5] VÁ IP & BIÊN DỊCH GAME
 # ==========================================
@@ -1296,25 +1170,15 @@ def apply_and_build(cfg):
         content = re.sub(r'DB_USER\s*=\s*".*?"', f'DB_USER = "{db_u}"', content)
         content = re.sub(r'DB_PASSWORD\s*=\s*".*?"', f'DB_PASSWORD = "{db_pass}"', content)
         
-        content, is_mod = patch_java_jdbc(content, os.path.basename(paths["DB_SERVICE"]))
+        if 'jdbc:mysql' in content.lower():
+            if 'detectCustomCollations' not in content:
+                p_info("   [+] Áp dụng JDBC URL Collation Patch (MariaDB 11)...")
+                params = "&useSSL=false&connectionCollation=utf8_general_ci&characterEncoding=UTF-8&useUnicode=yes&serverTimezone=UTC&useLegacyDatetimeCode=false&detectCustomCollations=false"
+                content = re.sub(r'(\?useUnicode=[^"]+)', r'?useUnicode=yes', content)
+                content = re.sub(r'(jdbc:mysql://[^"]+)', r'\1' + params, content, flags=re.IGNORECASE)
+                
         with open(paths["DB_SERVICE"], 'w', encoding='utf-8') as f: f.write(content)
         p_ok(f"{os.path.basename(paths['DB_SERVICE'])} → Cập nhật thành công")
-
-    # Tự động quét và vá toàn bộ các tệp Java chứa JDBC URL để tránh lỗi Collation MariaDB 11
-    if os.path.exists(paths["SRC_ROOT"]):
-        for root, dirs, files in os.walk(paths["SRC_ROOT"]):
-            for file in files:
-                if file.endswith(".java"):
-                    fp_java = os.path.join(root, file)
-                    try:
-                        with open(fp_java, 'r', encoding='utf-8', errors='ignore') as f_java:
-                            c_java = f_java.read()
-                        if 'jdbc:mysql' in c_java.lower() or 'jdbc:mariadb' in c_java.lower() or 'org.mariadb.jdbc' in c_java.lower():
-                            c_java, is_mod = patch_java_jdbc(c_java, file)
-                            if is_mod:
-                                with open(fp_java, 'w', encoding='utf-8') as f_java_w:
-                                    f_java_w.write(c_java)
-                    except: pass
 
     # 2. Vá DataGame.java
     if os.path.exists(paths["DATA_GAME"]):
@@ -1394,39 +1258,34 @@ def apply_and_build(cfg):
     c1 = remove_bom(paths["SRC_ROOT"])
     if c1 > 0: p_ok(f"Đã dọn sạch BOM cho {c1} file!")
 
-    # 7. Vá Lombok và mysql-connector-java cho toàn bộ Maven pom.xml (nếu có)
-    p_info("Đang quét tìm tất cả tệp pom.xml để nâng cấp Lombok & đồng bộ mysql-connector-java 5.1.49 (Fix triệt để MariaDB 11)...")
-    base_dir = cfg.get("base_dir", os.path.join(HOME, "nro_termux"))
-    if os.path.exists(base_dir):
-        for root, dirs, files in os.walk(base_dir):
-            for file in files:
-                if file == "pom.xml":
-                    p_xml = os.path.join(root, file)
-                    try:
-                        with open(p_xml, 'r', encoding='utf-8', errors='ignore') as f:
-                            c_xml = f.read()
-                        
-                        xml_modified = False
-                        
-                        # Nâng cấp lombok lên 1.18.32
-                        if "<artifactId>lombok</artifactId>" in c_xml:
-                            new_c_xml = re.sub(r'(<artifactId>lombok</artifactId>\s*<version>)[^<]+(</version>)', r'\g<1>1.18.32\g<2>', c_xml)
-                            if new_c_xml != c_xml:
-                                c_xml = new_c_xml
-                                xml_modified = True
-                                p_ok(f"       [✓] Đã nâng cấp Lombok lên 1.18.32 trong: {os.path.basename(root)}/pom.xml")
-                                
-                        # Đảm bảo dùng mysql-connector-java 5.1.49 - Đã vô hiệu hóa theo yêu cầu khôi phục kiến trúc ban đầu
-                        pass
-                                
-                        if xml_modified:
-                            with open(p_xml, 'w', encoding='utf-8') as f:
-                                f.write(c_xml)
-                    except Exception as e:
-                        p_err(f"Lỗi khi vá tệp {p_xml}: {e}")
+    # 7. Vá Lombok cho Maven
+    if not paths["IS_NEW03"]:
+        for p_xml in [os.path.join(paths["GAME_DIR"], "pom.xml"), os.path.join(paths["LOGIN_DIR"], "pom.xml")]:
+            if os.path.exists(p_xml):
+                try:
+                    with open(p_xml, 'r', encoding='utf-8') as f: content = f.read()
+                    if "<artifactId>lombok</artifactId>" in content:
+                        new_content = re.sub(r'(<artifactId>lombok</artifactId>\s*<version>)[^<]+(</version>)', r'\g<1>1.18.32\g<2>', content)
+                        if new_content != content:
+                            with open(p_xml, 'w', encoding='utf-8') as f: f.write(new_content)
+                            p_ok(f"Nâng cấp Lombok cho {os.path.basename(p_xml)} lên 1.18.32")
+                except: pass
 
-    # 8. Cấu hình mysql-connector-java 5.1.49 cho Ant project - Đã vô hiệu hóa theo yêu cầu khôi phục kiến trúc ban đầu
-    pass
+    # 8. Nâng cấp MySQL Driver cho Ant project (Fix lỗi MariaDB 11)
+    lib_dir = os.path.join(paths["GAME_DIR"], "lib")
+    if os.path.exists(lib_dir):
+        p_info("Đang đồng bộ Driver MySQL tối tân nhất (Fix MariaDB 11)...")
+        new_driver_url = "https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.49/mysql-connector-java-5.1.49.jar"
+        new_driver_path = os.path.join(lib_dir, "mysql-connector-java-5.1.49.jar")
+        if not os.path.exists(new_driver_path):
+            os.system(f"wget -q --show-progress {new_driver_url} -O {new_driver_path}")
+        
+        old_drivers = ['mysql-connector-java8-5.1.23.jar', 'mysql-connector-java-5.1.23.jar']
+        for od in old_drivers:
+            od_path = os.path.join(lib_dir, od)
+            if os.path.exists(od_path):
+                os.system(f"cp -f {new_driver_path} {od_path}")
+        p_ok("Đã nâng cấp Driver MySQL thành công!")
 
     # 8.5. Tự động vá lỗi hiển thị CPU âm (-100%) và RAM ảo (90%) trên Termux/Linux
     p_info("Đang quét và tối ưu hóa logic CPU hiển thị âm (-100%) & RAM ảo...")
@@ -2061,7 +1920,7 @@ def manage_lemp(cfg):
             os.system("pkill -9 nginx; pkill -9 php-fpm")
             time.sleep(1)
             p_info("Đang khởi động MariaDB, PHP-FPM & Nginx...")
-            os.system("mariadbd-safe --character-set-server=utf8 --collation-server=utf8_general_ci > /dev/null 2>&1 &")
+            os.system("mariadbd-safe > /dev/null 2>&1 &")
             os.system("php-fpm > /dev/null 2>&1")
             os.system("nginx > /dev/null 2>&1")
             
@@ -2223,14 +2082,28 @@ def manage_lemp(cfg):
                                 with open(log_file, 'r') as f:
                                     lines = f.readlines()
                                     last_lines = lines[-10:] if len(lines) > 10 else lines
-                                    print(f"\n--- 10 dòng cuối cùng trong log lỗi Nginx:\n{''.join(last_lines)}")
+                                    print(f"\n--- 10 dòng cuối log lỗi Nginx ({log_file}) ---")
+                                    for line in last_lines:
+                                        print(f"  {line.strip()}")
                             except:
                                 pass
+                else:
+                    p_err("Nginx phát hiện lỗi cấu hình:")
+                    print(proc.stderr)
+
+            p_h("GIẢI PHÁP KHẮC PHỤC TRÊN TERMUX")
+            print("  • Nếu test cú pháp thành công nhưng tiến trình nền bị kill ngay lập tức:")
+            print("    Đây là lỗi cực kỳ phổ biến do tính năng Phantom Processes của Android 12+ tự động tắt các app chạy ngầm trong Termux.")
+            print("    Giải pháp triệt để: Hãy mở Termux và chạy lệnh sau (hoặc cắm máy tính bật qua ADB):")
+            print(f"    {C.G}adb shell device_config put activity_manager max_phantom_processes 2147483647{C.E}")
+            print("    Hoặc giải pháp đơn giản nhất: Chuyển đổi sang sử dụng KSWEB (Mục [3]) để chạy Web/MySQL mượt mà, không lo bị Android tắt ngầm.")
             wait()
-            
         elif ch == "0":
             break
 
+# ==========================================
+# [8/9] VẬN HÀNH LOGIN & GAME SERVER
+# ==========================================
 def launch_server(cfg, stype):
     p = get_paths(cfg)
     path = p["LOGIN_DIR"] if stype == "login" else p["GAME_DIR"]
@@ -2611,7 +2484,7 @@ def main():
         os.system("clear")
         print(f"""{C.CY}{C.BOLD}
 ==========================================
-        NRO VNPro4 - Danh Rieng Cho SRC_4
+      NRO VNPro4 - Danh Rieng Cho SRC_4
 =========================================={C.E}
  {C.G}tôi tạo ra app này để mod những game này thành game pvp 
  hoặc các chế độ khác tương tự mà không cần cày quốc 
