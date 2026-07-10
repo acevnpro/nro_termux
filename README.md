@@ -105,11 +105,16 @@ python nro.py
 
 Khi giao diện ứng dụng quản lý hiện lên, bạn tiến hành bấm chọn theo đúng thứ tự các con số sau để setup:
 
-* **Bước 1:** Chọn `1` -> Chọn `2` *(Hãy tìm và chọn chính xác mục **SrcVipByVanTuan_termux**)*.
-* **Bước 2:** Chọn `3` -> Chọn `4` *(Tại đây bạn có thể chọn mục **Offline** hoặc **Online** tùy thuộc vào nhu cầu)*.
-* **Bước 3:** Chọn `5` (để build game cập nhật hệ thống IP mới) -> Chọn `6` (chỉnh sửa mức RAM phù hợp theo từng máy) -> Chọn `7` (quản lý LEMP, cần bật lên cho đến khi hiện chữ **OK màu xanh** thì mới có thể chạy được Server).
-* **Bước 4:** Chọn `8` -> Chọn tiếp `1` để khởi chạy trực tiếp. (Hoặc bạn có thể chọn mục `2` để chạy ẩn. Tuy nhiên nếu là lần đầu tiên setup, bạn nên chọn `1` để dễ dàng quan sát xem hệ thống có báo lỗi gì không. Nếu mọi thứ ổn định, lần sau có thể tắt đi và chọn chạy ẩn).
-* **Bước 5 (Mở tab mới):** Chọn `9` -> Chọn tiếp `1` tương tự như ở mục số 8.
+* **Bước 1:** Chọn `1` -> 1 (khuyên dùng ) hoặc 2 nếu máy của bạn không cài được LEMP 
+* **Bước 2:** Chọn `2` Hãy tìm và chọn chính xác mục **SrcVipByVanTuan_termux hoặc SRC bạn đang cài đặt**
+* **Bước 3:** Chọn `3` -> 1 (để cài đặt database và up SQL lên SV ) -> 2 để chọn up lại SQL backup nếu có
+* **Bước 4:** Chọn `4` tại đây bạn có thể chọn mục **Offline** hoặc **Online** tùy thuộc vào nhu cầu
+* **Bước 5:** Chọn `5` để build game cập nhật hệ thống IP mới
+* **Bước 6:** Chọn `6` chỉnh sửa mức RAM phù hợp theo từng máy lưu ý nếu cho máy ăn ram nhiều vợt mức cho phép
+* có thể bị sập SV do tràn ram hoặc hệ thống android tắt trương trình tốn tài nguyên
+* **Bước 7:** Chọn `7` quản lý LEMP, cần bật lên khi reset termux hiện chữ **OK màu xanh** thì mới có thể chạy được Server.
+* **Bước 8:** Chọn `8` -> Chọn tiếp `1` để khởi chạy trực tiếp. Hoặc bạn có thể chọn mục `2` để chạy ẩn. Tuy nhiên nếu là lần đầu tiên setup, bạn nên chọn `1` để dễ dàng quan sát xem hệ thống có báo lỗi gì không. Nếu mọi thứ ổn định, lần sau có thể tắt đi và chọn 2 chạy ẩn ( lưu ý một số SRC khác không có mục này vì nó không cần )
+* **Bước 9 (Mở tab mới) :** Chọn `9` hoặc 8 đối với các src khác -> Chọn tiếp `1` tương tự như ở mục số 8. ( lưu ý nếu chạy ẩn thì không cần bật tab mới và tôi khuyên dùng chạy ẩn để treo SV vì nó có chế độ tự động chạy lại SV khi bị sập hoặc bảo trì hàng ngày )
 
 > 💡 **Mẹo mở tab ẩn nhanh:** Ấn giữ và vuốt nhẹ nhàng từ cạnh bên trái phía trên màn hình sang phải để mở menu ẩn của Termux, sau đó bấm chọn tạo Tab mới (New Session).
 
