@@ -31,7 +31,7 @@ Tham gia ngay các nhóm cộng đồng dưới đây để cùng thảo luận,
 
 ### 🤖 Hướng Dẫn Tự Khắc Phục Lỗi Bằng AI
 Hiện nay đang là thời đại của trí tuệ nhân tạo (AI). Bản chất dự án này cũng được hoàn thiện 100% nhờ sự trợ giúp của AI. Do đó, khi gặp bất kỳ vướng mắc hay lỗi nào trong quá trình cài đặt, hãy chủ động hỏi AI trước khi đăng bài lên nhóm.
-* **Cách hỏi AI:** Bạn chỉ cần copy toàn bộ bài hướng dẫn này kèm link trang dự án, chụp ảnh màn hình lỗi hoặc copy dòng mã báo lỗi ở Termux rồi gửi cho Gemini, ChatGPT, DeepSeek... Hệ thống AI sẽ phân tích và đưa ra câu trả lời tỉ mỉ nhất cho bạn.
+* **Cách hỏi AI:** Bạn chỉ cần copy toàn bộ bài hướng dẫn này kèm link trang dự án, chụp ảnh màn hình lỗi hoặc copy dòng mã báo lỗi ở Termux rồi gửi cho Gemini, ChatLGBT, DeepSeek... Hệ thống AI sẽ phân tích và đưa ra câu trả lời tỉ mỉ nhất cho bạn.
 * **Về phía Admin:** Mình chỉ tập trung sâu vào phần setup cấu hình SRC chứ chưa tìm hiểu về mảng mod SRC. Vì vậy, xin vui lòng không nhắn tin hỏi mình về cách mod game. Với mọi bộ SRC được chia sẻ, mình luôn đính kèm link nguồn để các bạn có thể tiện liên hệ hỏi trực tiếp chủ nhân của bộ SRC đó.
 
 > ⚠️ **Trong nhóm:** Đừng vào nhóm và hỏi những câu như: *"Anh ơi em muốn cài thì làm thế nào ạ!"* — như vậy là bạn đang làm lãng phí thời gian của người khác. Thay vào đó, hãy hỏi AI trươc khi hỏi trực tiếp hoặc có thể nói *"Anh ơi sáng nay mẹ em mới bị mất 100k mà em lại không biết cài cái này, có ai cứu em với!"* (Cuộc đời không ai cho không ai cái gì đâu nhé :D).
