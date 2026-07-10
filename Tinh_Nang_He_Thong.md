@@ -412,7 +412,7 @@ Toàn bộ cấu hình được lưu tại `~/nro_config.json`, bao gồm:
 |---|---|
 | 📱 **Nhóm Zalo** | [Tham gia ngay](https://zalo.me/g/nran3u1pi3hgm9mq5mpc) |
 | 📘 **Nhóm Facebook** | [Cộng đồng NRO Termux](https://www.facebook.com/groups/nro.termux) |
-| 🎬 **YouTube** | [DAITEN Studio](https://www.youtube.com/watch?v=YTnZo66T0Tk) |
+| 🎬 **YouTube** | [VN Pro](https://www.youtube.com/@VN_pro) |
 
 ---
 
