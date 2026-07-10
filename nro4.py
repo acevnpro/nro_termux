@@ -35,7 +35,11 @@ def load_config():
             "max_backups": 24,
             "backup_dir": os.path.join(HOME, "nro_backups")
         },
-        "status": {"env": False, "source": False, "db_web": False, "build": False}
+        "status": {"env": False, "source": False, "db_web": False, "build": False},
+        "web_show_vnd": True,
+        "web_show_admin": True,
+        "web_admin_notice": "",
+        "web_admin_pass": "admin"
     }
     if os.path.exists(CONFIG_FILE):
         try:
@@ -539,8 +543,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {{
 </body>
 </html>
 """
-    with open(os.path.join(ksweb_web, "index.php"), "w", encoding="utf-8") as f:
-        f.write(php_content)
+    refresh_web_index(cfg)
     p_ok(f"Web đăng ký đã được tạo thành công tại: {ksweb_web}")
 
 def setup_db_ksweb(cfg):
@@ -875,8 +878,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {{
 </body>
 </html>
 """
-    with open(os.path.join(reg_dir, "index.php"), "w", encoding="utf-8") as f:
-        f.write(php_content)
+    refresh_web_index(cfg)
         
     # Thiết lập và cấu hình phpMyAdmin & PHP-FPM
     p_info("Đang cấu hình php-fpm...")
@@ -1051,6 +1053,7 @@ def manage_tcp(cfg):
     print("[5] Cấu hình Offline: Chạy mạng LAN/WiFi (Sử dụng IP máy)")
     print("[6] Cấu hình Offline: Chạy trên máy ảo (Localhost 127.0.0.1)")
     print("[7] Mở cổng Web đăng ký tài khoản (Cloudflare Tunnel - Miễn phí)")
+    print("[8] Mở cổng Web đăng ký tài khoản (Ngrok Domain cố định)")
     print("[0] Quay lại")
     ch = input(f"\n{C.BOLD}Chọn: {C.E}").upper()
 
@@ -1142,6 +1145,22 @@ def manage_tcp(cfg):
                     save_config(cfg)
                     p_ok(f"Mở cổng Cloudflare thành công: {cfg['web_url']}")
         except: p_err("Không thể lấy đường dẫn Cloudflare Tunnel!")
+    elif ch == "8":
+        domain = input(f"{C.CY}Nhập domain Ngrok cố định của bạn (VD: my-app.ngrok-free.app): {C.E}").strip()
+        if not domain:
+            p_err("Không được để trống domain!")
+        else:
+            os.system("tmux kill-session -t nro_ngrok_web 2>/dev/null")
+            os.system(f"tmux new-session -d -s nro_ngrok_web 'termux-chroot ngrok http --domain={domain} 8080'")
+            p_info("Đang thiết lập cổng kết nối Ngrok Web (vui lòng chờ 3 giây)...")
+            time.sleep(3)
+            web_url = f"https://{domain}"
+            if cfg.get('backend') == 'ksweb':
+                web_subdir = cfg.get('ksweb_web_dir', 'nso_web')
+                web_url = web_url.rstrip('/') + f'/{web_subdir}/'
+            cfg['web_url'] = web_url
+            save_config(cfg)
+            p_ok(f"Mở cổng Ngrok Web thành công: {cfg['web_url']}")
     wait()
 
 # ==========================================
@@ -2254,6 +2273,386 @@ while True:
             break
 
 # ==========================================
+# [W] QUẢN LÝ GIAO DIỆN WEB ĐĂNG KÝ
+# ==========================================
+def refresh_web_index(cfg):
+    db_name = cfg.get('db_name', 'nrovip')
+    backend = cfg.get('backend', 'termux')
+    ksweb_pass = cfg.get('ksweb_mysql_pass', '') if backend == 'ksweb' else ""
+    footer_text = "KSWEB Hybrid" if backend == 'ksweb' else "LEMP Termux"
+    
+    if backend == 'ksweb':
+        web_subdir = cfg.get('ksweb_web_dir', 'nso_web')
+        web_dir = f"/sdcard/htdocs/{web_subdir}"
+    else:
+        web_dir = os.path.join(HOME, "web_register")
+    os.makedirs(web_dir, exist_ok=True)
+    
+    # 1. db_config.php (Always overwritten)
+    db_cfg_content = f"<?php\n$db_name = '{db_name}';\n$ksweb_pass = '{ksweb_pass}';\n$footer_text = '{footer_text}';\n?>"
+    with open(os.path.join(web_dir, "db_config.php"), "w", encoding="utf-8") as f:
+        f.write(db_cfg_content)
+        
+    # 2. web_config.json (Always overwritten to sync with nro_config)
+    web_cfg_content = json.dumps({
+        "web_show_vnd": cfg.get('web_show_vnd', True),
+        "web_show_admin": cfg.get('web_show_admin', True),
+        "web_admin_notice": cfg.get('web_admin_notice', ''),
+        "web_admin_pass": cfg.get('web_admin_pass', 'admin')
+    }, indent=4)
+    with open(os.path.join(web_dir, "web_config.json"), "w", encoding="utf-8") as f:
+        f.write(web_cfg_content)
+        
+    # 3. index.php (Only created if not exists, so user can edit it via admin.php)
+    index_file = os.path.join(web_dir, "index.php")
+    should_write_index = True
+    if os.path.exists(index_file):
+        with open(index_file, "r", encoding="utf-8", errors="ignore") as f:
+            content = f.read()
+            if "web_config.json" in content and "Zalo" in content:
+                should_write_index = False
+
+    if should_write_index:
+        index_content = r"""<?php
+error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_WARNING);
+ini_set('display_errors', 0);
+require_once 'db_config.php';
+$web_cfg = json_decode(file_get_contents('web_config.json'), true);
+$show_vnd = $web_cfg['web_show_vnd'] ?? true;
+$show_admin = $web_cfg['web_show_admin'] ?? true;
+$admin_notice = $web_cfg['web_admin_notice'] ?? '';
+
+$conn = new mysqli("127.0.0.1", "root", $ksweb_pass, $db_name);
+$msg = ""; $status = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $user = preg_replace("/[^a-zA-Z0-9]/", "", $_POST['user']);
+    $pass = $_POST['pass'];
+    $email = isset($_POST['email']) ? preg_replace("/[^a-zA-Z0-9@.]/", "", $_POST['email']) : "";
+    $isAdmin = isset($_POST['is_admin']) ? 1 : 0;
+    $vnd = isset($_POST['vnd']) ? (int)$_POST['vnd'] : 0;
+    
+    if (strlen($user) < 4 || strlen($pass) < 1) {
+        $msg = "Tên tài khoản tối thiểu 4 ký tự!"; $status = "error";
+    } else {
+        try {
+            $cols_res = $conn->query("DESCRIBE account");
+            $db_cols = [];
+            while ($row = $cols_res->fetch_assoc()) {
+                $db_cols[$row['Field']] = ['Null' => $row['Null'], 'Default' => $row['Default']];
+            }
+            $insert_data = [
+                'username' => "'$user'", 'password' => "'$pass'", 'email' => "'$email'",
+                'is_admin' => $isAdmin, 'vnd' => $vnd, 'active' => 1
+            ];
+            foreach ($db_cols as $field => $meta) {
+                if ($field === 'id') continue;
+                if (!isset($insert_data[$field]) && $meta['Null'] === 'NO' && $meta['Default'] === null) {
+                    $insert_data[$field] = "''";
+                }
+            }
+            $final_cols = []; $final_vals = [];
+            foreach ($insert_data as $field => $val) {
+                if (isset($db_cols[$field])) { $final_cols[] = $field; $final_vals[] = $val; }
+            }
+            $check = $conn->query("SELECT id FROM account WHERE username = '$user'");
+            if ($check->num_rows > 0) {
+                $msg = "Tài khoản này đã tồn tại!"; $status = "error";
+            } else {
+                $sql = "INSERT INTO account (" . implode(", ", $final_cols) . ") VALUES (" . implode(", ", $final_vals) . ")";
+                if ($conn->query($sql)) {
+                    $msg = "Đăng ký thành công!";
+                    if ($isAdmin) $msg .= " Đã cấp quyền Admin.";
+                    if ($vnd > 0) $msg .= " Tặng " . number_format($vnd) . " VND.";
+                    $status = "success";
+                } else {
+                    $msg = "Lỗi Database: " . $conn->error; $status = "error";
+                }
+            }
+        } catch (Exception $e) { $msg = "Lỗi hệ thống: " . $e->getMessage(); $status = "error"; }
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NRO - Đăng Ký Test Game</title>
+    <style>
+        :root { --primary: #00d2ff; --secondary: #3a7bd5; --bg: #0f172a; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; color: white; padding: 20px; }
+        .card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 2rem; border-radius: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; max-width: 450px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        h1 { text-align: center; margin-bottom: 1.5rem; font-weight: 800; background: linear-gradient(to right, #00d2ff, #3a7bd5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .badge { text-align: center; margin-bottom: 1rem; }
+        .badge span { background: linear-gradient(to right, #10b981, #059669); padding: 4px 12px; border-radius: 999px; font-size: 0.7rem; font-weight: bold; }
+        .input-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; color: #94a3b8; }
+        input[type="text"], input[type="password"], input[type="email"], input[type="number"] { width: 100%; padding: 0.75rem 1rem; border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(0,0,0,0.2); color: white; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.2); }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin: 1rem 0; cursor: pointer; }
+        .checkbox-group input { width: 18px; height: 18px; cursor: pointer; }
+        button { width: 100%; padding: 0.9rem; border: none; border-radius: 0.75rem; background: linear-gradient(to right, var(--primary), var(--secondary)); color: white; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 1rem; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 210, 255, 0.3); }
+        .alert { padding: 0.8rem; border-radius: 0.75rem; margin-bottom: 1rem; text-align: center; font-size: 0.85rem; }
+        .success { background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #4ade80; }
+        .error { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #f87171; }
+        .footer { text-align: center; margin-top: 1.5rem; font-size: 0.75rem; color: #64748b; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>NRO TEST TOOLS</h1>
+        <div class="badge"><span><?php echo $footer_text; ?></span></div>
+        
+        <div style="background: rgba(0, 210, 255, 0.1); border-left: 4px solid #00d2ff; padding: 15px; margin-bottom: 20px; border-radius: 8px; font-size: 0.85rem; line-height: 1.5; text-align: justify;">
+            <strong>Chào mừng các bạn đến với NRO termux</strong> phiên bản SRC được chia sẻ bởi <a href="https://www.youtube.com/watch?v=YTnZo66T0Tk" target="_blank" style="color: #00d2ff; font-weight: bold; text-decoration: none;">DAITEN Studio</a> dự án free hoàn toàn nếu có ai bắt trả phí chắc chắn nó là scam ! chúc các bạn chơi và mod game vui vẻ !
+            <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center;">
+                <a href="https://zalo.me/g/nran3u1pi3hgm9mq5mpc" target="_blank" style="background: #0068ff; color: white; padding: 6px 12px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.8rem; flex: 1; text-align: center;">📱 Nhóm Zalo</a>
+                <a href="https://www.facebook.com/groups/nro.termux" target="_blank" style="background: #1877f2; color: white; padding: 6px 12px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.8rem; flex: 1; text-align: center;">📘 Nhóm Facebook</a>
+            </div>
+        </div>
+        
+        <?php
+        $game_ip_port = "Chưa thiết lập";
+        if (file_exists("game_info.txt")) {
+            $game_ip_port = trim(file_get_contents("game_info.txt"));
+        }
+        ?>
+        <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 15px; margin-bottom: 20px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">IP / Domain Kết Nối Game</div>
+            <div style="font-size: 1.2rem; font-weight: bold; color: #10b981; letter-spacing: 0.5px; cursor: pointer;" onclick="alert('Đã copy IP!'); navigator.clipboard.writeText('<?php echo htmlspecialchars($game_ip_port); ?>');"><?php echo htmlspecialchars($game_ip_port); ?> 📋</div>
+        </div>
+        
+        <?php if (!empty($admin_notice)): ?>
+        <div style="background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
+            <div style="font-weight: bold; color: #3b82f6; margin-bottom: 5px;">THÔNG BÁO TỪ ADMIN:</div>
+            <div style="font-size: 0.9rem; line-height: 1.5; color: #e2e8f0;"><?php echo htmlspecialchars($admin_notice); ?></div>
+        </div>
+        <?php endif; ?>
+        
+        <?php if ($msg): ?>
+            <div class="alert <?php echo $status; ?>"><?php echo $msg; ?></div>
+        <?php endif; ?>
+        
+        <form method="POST">
+            <div class="input-group">
+                <label>Tên tài khoản</label>
+                <input type="text" name="user" placeholder="Nhập username..." required autofocus>
+            </div>
+            <div class="input-group">
+                <label>Mật khẩu</label>
+                <input type="password" name="pass" placeholder="Nhập mật khẩu..." required>
+            </div>
+            <div class="input-group">
+                <label>Email (Tùy chọn)</label>
+                <input type="email" name="email" placeholder="Nhập email...">
+            </div>
+            
+            <?php if ($show_vnd): ?>
+            <div class="input-group">
+                <label>Số tiền VND muốn nạp (Để test)</label>
+                <input type="number" name="vnd" value="1000000" placeholder="Nhập số tiền...">
+            </div>
+            <?php endif; ?>
+            
+            <?php if ($show_admin): ?>
+            <label class="checkbox-group">
+                <input type="checkbox" name="is_admin"> Kích hoạt quyền Admin cho tài khoản này
+            </label>
+            <?php endif; ?>
+            
+            <button type="submit">ĐĂNG KÝ VÀ NHẬN QUÀ</button>
+        </form>
+        <div class="footer">Dự án Mod Game NRO - <?php echo $footer_text; ?></div>
+        <div class="footer" style="margin-top:5px;"><a href="admin.php" style="color:#3b82f6; text-decoration:none;">Truy cập Admin Web</a></div>
+    </div>
+</body>
+</html>
+"""
+        with open(index_file, "w", encoding="utf-8") as f:
+            f.write(index_content)
+
+    # 4. admin.php (Only created if not exists)
+    admin_file = os.path.join(web_dir, "admin.php")
+    if not os.path.exists(admin_file) or os.path.getsize(admin_file) < 100:
+        admin_content = r"""<?php
+session_start();
+$cfg_file = 'web_config.json';
+$cfg = json_decode(file_get_contents($cfg_file), true);
+$admin_pass = $cfg['web_admin_pass'] ?? 'admin';
+
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header("Location: admin.php");
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login_pass'])) {
+    if ($_POST['login_pass'] === $admin_pass) {
+        $_SESSION['is_admin_web'] = true;
+        header("Location: admin.php");
+        exit;
+    } else {
+        $login_err = "Mật khẩu không đúng!";
+    }
+}
+
+if (!isset($_SESSION['is_admin_web'])) {
+?>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập Web Admin</title>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 350px; text-align: center; }
+        input { width: 100%; padding: 10px; margin-top: 10px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #333; background: #222; color: white; box-sizing: border-box;}
+        button { width: 100%; padding: 10px; border: none; border-radius: 8px; background: #3b82f6; color: white; font-weight: bold; cursor: pointer;}
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Admin Login</h2>
+        <?php if(isset($login_err)) echo "<p style='color:#ef4444;'>$login_err</p>"; ?>
+        <form method="POST">
+            <input type="password" name="login_pass" placeholder="Nhập mật khẩu Admin..." autofocus required>
+            <button type="submit">Đăng Nhập</button>
+        </form>
+    </div>
+</body>
+</html>
+<?php
+    exit;
+}
+
+// Xử lý lưu config
+$msg = "";
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
+    if ($_POST['action'] == 'save_cfg') {
+        $cfg['web_show_vnd'] = isset($_POST['show_vnd']) ? true : false;
+        $cfg['web_show_admin'] = isset($_POST['show_admin']) ? true : false;
+        $cfg['web_admin_notice'] = $_POST['admin_notice'];
+        file_put_contents($cfg_file, json_encode($cfg, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        $msg = "Đã lưu cài đặt hiển thị!";
+    } elseif ($_POST['action'] == 'save_code') {
+        file_put_contents('index.php', $_POST['source_code']);
+        $msg = "Đã cập nhật mã nguồn index.php!";
+    }
+}
+$cfg = json_decode(file_get_contents($cfg_file), true);
+?>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Admin Control Panel</title>
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        h1 { color: #3b82f6; text-align: center; }
+        .tab-btn { background: #1e293b; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; margin-right: 5px; }
+        .tab-btn.active { background: #3b82f6; }
+        .tab-content { display: none; margin-top: 20px; }
+        .tab-content.active { display: block; }
+        label { display: block; margin-bottom: 10px; cursor: pointer; }
+        textarea { width: 100%; height: 300px; padding: 10px; border-radius: 5px; border: 1px solid #333; background: #111; color: #10b981; font-family: monospace; box-sizing: border-box; margin-bottom: 15px; }
+        button.submit { background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
+        .alert { background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #10b981; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center; }
+    </style>
+    <script>
+        function showTab(id) {
+            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Bảng Điều Khiển Web Admin</h1>
+        <div style="text-align:right; margin-bottom: 20px;">
+            <a href="index.php" target="_blank" style="color: #00d2ff; text-decoration: none; margin-right: 15px;">Mở Web Đăng Ký</a>
+            <a href="?logout=1" style="color: #ef4444; text-decoration: none;">Đăng Xuất</a>
+        </div>
+        
+        <?php if($msg) echo "<div class='alert'>$msg</div>"; ?>
+        
+        <div>
+            <button class="tab-btn active" onclick="showTab('tab-settings')">Cài Đặt Form</button>
+            <button class="tab-btn" onclick="showTab('tab-code')">Sửa Code index.php</button>
+        </div>
+        
+        <div id="tab-settings" class="tab-content active">
+            <form method="POST">
+                <input type="hidden" name="action" value="save_cfg">
+                <label>
+                    <input type="checkbox" name="show_vnd" <?php echo ($cfg['web_show_vnd']??true) ? 'checked' : ''; ?>> Hiển thị ô nhập tiền VND
+                </label>
+                <label>
+                    <input type="checkbox" name="show_admin" <?php echo ($cfg['web_show_admin']??true) ? 'checked' : ''; ?>> Hiển thị tuỳ chọn cấp quyền Admin
+                </label>
+                <div style="margin-top: 15px; margin-bottom: 5px;">Nội dung Thông Báo (để trống nếu muốn ẩn):</div>
+                <textarea name="admin_notice" style="height: 100px; color: white; background: #222;"><?php echo htmlspecialchars($cfg['web_admin_notice']??''); ?></textarea>
+                <button type="submit" class="submit">LƯU CÀI ĐẶT</button>
+            </form>
+        </div>
+        
+        <div id="tab-code" class="tab-content">
+            <form method="POST">
+                <input type="hidden" name="action" value="save_code">
+                <div style="margin-bottom: 5px; color:#ef4444; font-size: 0.85rem;">* CẢNH BÁO: Chỉnh sửa sai mã nguồn có thể làm lỗi trang đăng ký! Nhấn 'Lưu' để cập nhật.</div>
+                <textarea name="source_code"><?php echo htmlspecialchars(file_get_contents('index.php')); ?></textarea>
+                <button type="submit" class="submit">LƯU MÃ NGUỒN</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+"""
+        with open(admin_file, "w", encoding="utf-8") as f:
+            f.write(admin_content)
+    
+    return web_dir
+
+def manage_web_ui(cfg):
+    while True:
+        os.system("clear")
+        p_h("QUẢN LÝ TÀI KHOẢN ADMIN WEB")
+        
+        curr_pass = cfg.get('web_admin_pass', 'admin')
+        ip_port = get_local_ip()
+        if cfg.get('backend', 'termux') == 'ksweb':
+            port = "8080"
+        else:
+            port = cfg.get('web_port', 8080)
+            
+        print(f"  > Trang quản lý đã được chuyển lên Web để chống lỗi Font!")
+        print(f"  > Đường dẫn Web Admin: {C.CY}http://{ip_port}:{port}/admin.php{C.E}")
+        print(f"  > Mật khẩu truy cập hiện tại: {C.G}{curr_pass}{C.E}\n")
+        
+        print("  [1] Đổi Mật Khẩu Truy Cập Web Admin")
+        print("  [0] Quay lại")
+        
+        ch = input(f"\n{C.BOLD}Chọn: {C.E}").strip()
+        
+        if ch == "1":
+            new_pass = input("Nhập mật khẩu mới (hoặc Enter để huỷ): ").strip()
+            if new_pass:
+                cfg['web_admin_pass'] = new_pass
+                save_config(cfg)
+                refresh_web_index(cfg)
+                p_ok(f"Đã đổi mật khẩu thành công: {new_pass}")
+                time.sleep(1.5)
+        elif ch == "0":
+            break
+
+# ==========================================
 # [A] QUẢN LÝ TÀI KHOẢN (TERMINAL CLI)
 # ==========================================
 def manage_accounts(cfg):
@@ -2505,6 +2904,7 @@ def main():
  [7] {svc_label}
  [8] VẬN HÀNH GAME SERVER: {g_st}
  [9] QUẢN LÝ TÀI KHOẢN
+ [W] QUẢN LÝ GIAO DIỆN WEB ĐĂNG KÝ
  [A] TỰ ĐỘNG SAO LƯU XOAY VÒNG (BACKUP DAEMON): {f"{C.G}ON{C.E}" if is_backup_daemon_running() else f"{C.R}OFF{C.E}"}
  [B] GIÁM SÁT TIẾN TRÌNH TMUX (NGROK/CF/SERVER)
  {C.G}[K] CHUYỂN ĐỔI BACKEND (LEMP ↔ KSWEB){C.E}
@@ -2521,6 +2921,7 @@ def main():
         elif ch == "7": manage_lemp(cfg)
         elif ch == "8": launch_server(cfg, "game")
         elif ch == "9": manage_accounts(cfg)
+        elif ch == "W": manage_web_ui(cfg)
         elif ch == "A": manage_auto_backup(cfg)
         elif ch == "B": manage_tmux(cfg)
         elif ch == "K": switch_backend(cfg)
