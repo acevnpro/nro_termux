@@ -53,7 +53,7 @@ Trước khi tiến hành cài đặt, hãy tải đầy đủ các file cần t
 
 1.  **Thư mục tổng hợp:** [Tất cả file cần thiết cho dự án](https://drive.google.com/drive/folders/1m9yQjo7JuaKr8So16u8k2hkGrO-xVL9V?usp=sharing)  
     *(Bao gồm file khung chỉnh sửa để ném vào thư mục `antigravity` cùng với `src` and `nro.py`)*.
-2.  **Mã nguồn Game chính (Source 1):** [Tải file Src tại đây](https://drive.google.com/file/d/17wqWUp3avOhv6xkgbX03joR3zLH6A7i1/view?usp=sharing)  
+2.  **Mã nguồn Game (SRC 1):** [Tải file Src tại đây](https://drive.google.com/file/d/17wqWUp3avOhv6xkgbX03joR3zLH6A7i1/view?usp=sharing)  
     *(Bản SRC này do anh Tuấn Tò Mò chia sẻ tại video [Xem trên YouTube](https://www.youtube.com/watch?v=WHOe6tFzb80). Yêu cầu tải về và giải nén trong thư mục **Download** của điện thoại)*.
 3.  **Ứng dụng Termux:** [Tải Termux bản GitHub (v0.118.3)](https://github.com/termux/termux-app/releases/tag/v0.118.3)  
     *(Nên dùng bản này, tuyệt đối **không** dùng bản tải trên Google Play vì đã quá cũ và bị lỗi kho lưu trữ)*.
