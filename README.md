@@ -26,7 +26,7 @@ Tham gia ngay các nhóm cộng đồng dưới đây để cùng thảo luận,
 * **Phở Bò (Facebook Group):** [Cộng đồng NRO Termux](https://www.facebook.com/groups/nro.termux)
 * **Nhóm Zalo hỗ trợ:** [Tham gia Nhóm Zalo](https://zalo.me/g/nran3u1pi3hgm9mq5mpc)
 * **Video Hướng Dẫn Chi Tiết:** [Xem trên YouTube](https://www.youtube.com/watch?v=D4LTha2tiVU)
-* **Video Hướng Dẫn cho src_4:** [Xem trên Facebook]  (https://www.facebook.com/share/v/1CdR4m9ze5/)  
+* **Video Hướng Dẫn cho src_4:** [Xem trên Facebook ]  (https://www.facebook.com/share/v/1CdR4m9ze5/)  
 
 > 🔴 **LƯU Ý ĐẶC BIỆT:** Đây là dự án phi lợi nhuận, mọi người tham gia và cống hiến đều dựa trên tinh thần đam mê là chính, không ai có nghĩa vụ hay bắt buộc phải hỗ trợ bạn. Vì vậy, nếu nhận được sự trợ giúp từ thành viên khác, hãy luôn thể hiện lòng biết ơn.
 
