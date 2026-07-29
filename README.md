@@ -88,11 +88,11 @@ pkg install python wget -y
 
 ### 5. Tải file script vận hành Server (Dành cho SRC chính)
 ```bash
-wget https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py
+wget https://github.com/q140298-sys/nro_termux/releases/download/v1.2/nro.py
 ```
 *Nếu lệnh `wget` ở trên bị lỗi, hãy dùng lệnh `curl` thay thế dưới đây:*
 ```bash
-curl -LO https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py
+curl -LO https://github.com/q140298-sys/nro_termux/releases/download/v1.2/nro.py
 ```
 
 ### 6. Khởi chạy Tool quản lý
@@ -135,7 +135,7 @@ Dưới đây là link tải SRC mở rộng kèm lệnh tải file Python quả
   *(Bộ SRC này được chia sẻ bởi **DAITEN Studio** tại video [Xem trên YouTube](https://www.youtube.com/watch?v=YTnZo66T0Tk&t=10s})*
 * **Lệnh tải script quản lý nro3.py:**
 ```bash
-curl -LO https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro3.py
+curl -LO https://github.com/q140298-sys/nro_termux/releases/download/v1.2/nro3.py
 ```
 
 ### 📦 Bộ SRC_4
@@ -143,7 +143,7 @@ curl -LO https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro3.py
   *(Bộ SRC này được chia sẻ bởi **DAITEN Studio** tại video [Xem trên YouTube](https://www.youtube.com/watch?v=CLxdt8_fa6U&t=341s})*
 * **Lệnh tải script quản lý nro4.py:**
 ```bash
-curl -LO https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro4.py
+curl -LO https://github.com/q140298-sys/nro_termux/releases/download/v1.2/nro4.py
 ```
 
 ---
