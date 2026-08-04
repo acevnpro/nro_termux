@@ -1847,12 +1847,12 @@ def main():
 
         print(f"""{C.CY}{C.BOLD}
 ==========================================
-        NRO SERVER MANAGER - PRO
+    NRO VN_Pro DANH RIENG CHO SRC_1
 =========================================={C.E}
- {C.G}tôi tạo ra app này để mod những game này thành game pvp 
- hoặc các chế độ khác tương tự mà không cần cày quốc 
- ae ai có chung ý tưởng nhớ share cho mọi người để 
- chúng ta cùng vui vẻ nhé!{C.E}
+ {C.G}tôi tạo ra app này để mod những game này thành
+ game moba pvp ..vv hoặc các chế độ khác tương tự  
+ ae ai có chung ý tưởng hoặc sản phẩn tương tự nhớ 
+ share cho mọi người để chúng ta cùng vui vẻ nhé!{C.E}
 ------------------------------------------
  {C.BOLD}RAM: {ram_bar}
  {C.BOLD}IP:  {C.G}{ip}{C.E} | {C.BOLD}MODE:{C.E} {C.H}{mode}{C.E} | {C.BOLD}BACKEND:{C.E} {backend_label}
