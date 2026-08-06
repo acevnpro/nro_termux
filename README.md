@@ -149,7 +149,7 @@ curl -LO https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro4.py
 ---
 > 💡 **Lệnh xóa data termux nhanh không cần cài lại python khi test ( nếu cần ổn định vẫn nên xóa data termux ):**
 ```bash
-tmux kill-server 2>/dev/null ; pkill -9 -f 'nro_|ServerLogin|ServerManager|nginx|php-fpm|java|node' 2>/dev/null ; fuser -k -9 8888/tcp 14445/tcp 8080/tcp 8081/tcp 9000/tcp 4040/tcp 2>/dev/null ; mariadb -u root -e "SELECT concat('DROP DATABASE IF EXISTS ', schema_name, ';') FROM information_schema.schemata WHERE schema_name NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys');" 2>/dev/null | grep DROP | mariadb -u root 2>/dev/null
+rm -rf $PREFIX/var/lib/mysql && mysql_install_db && cd ~ && rm -rf *
 ```
 
 ---
