@@ -58,6 +58,9 @@ Trước khi tiến hành cài đặt, hãy tải đầy đủ các file cần t
     *(Bản SRC này do anh Tuấn Tò Mò chia sẻ tại video [Xem trên YouTube](https://www.youtube.com/watch?v=WHOe6tFzb80). Yêu cầu tải về và giải nén trong thư mục **Download** của điện thoại)*.
 3.  **Ứng dụng Termux:** [Tải Termux bản GitHub (v0.118.3)](https://github.com/termux/termux-app/releases/tag/v0.118.3)  
     *(Nên dùng bản này, tuyệt đối **không** dùng bản tải trên Google Play vì đã quá cũ và bị lỗi kho lưu trữ)*.
+```bash
+   curl -LO https://github.com/acevnpro/rsv_termux/releases/download/v1.0/rsv.py
+```
 
 ---
 
