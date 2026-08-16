@@ -101,6 +101,11 @@ pkg update && pkg upgrade -y && pkg install python -y && curl -LO https://github
  
 luôn luôn chọn Y và enter nhé
 
+### sau khi chọn và tải bản game mong muốn lần sau chỉ cần gõ lệnh bên dưới là có thể vào trình setup và quản lý src 
+```bash
+python rsv.py
+```
+
 ---
 
 ## 🎮 Hướng Dẫn Thao Tác Trong Ứng Dụng
