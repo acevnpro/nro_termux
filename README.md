@@ -64,18 +64,17 @@ Trước khi tiến hành cài đặt, hãy tải đầy đủ các file cần t
 
 ---
 
-## 🛠️ Các Bước Cài Đặt Trên Termux (lưu ý các bộ SRC khác nhau sẽ dùng tập lệnh py khác nhau )
+## 🛠️ Ngăn Android Tắt Termux
 
-Mở ứng dụng Termux lên, sao chép và dán lần lượt các lệnh sau (bấm Enter sau mỗi ô lệnh):
+Đây là bước quan trọng nhất. Android tích cực tắt các ứng dụng nền để tiết kiệm pin. Nếu không có các cài đặt này, tác tử sẽ ngừng hoạt động khi bạn khóa màn hình.
 
-### 1. Giữ cho Termux luôn chạy ngầm
+### 1. Tắt tối ưu hóa pin
+
+Vào Cài đặt > Pin > Sử dụng pin ứng dụng > Termux và đặt thành Không hạn chế.
+
+### 2. Kích hoạt wake lock trong Termux
 ```bash
 termux-wake-lock
-```
-
-### 2. Cập nhật hệ thống Termux
-```bash
-pkg update -y
 ```
 
 ### 3. Cấp quyền truy cập bộ nhớ điện thoại (Bắt buộc)
@@ -84,23 +83,17 @@ termux-setup-storage
 ```
 > 🔴 **LƯU Ý CỰC KỲ QUAN TRỌNG:** Khi hệ thống hiển thị thông báo trên màn hình điện thoại, bạn phải bấm chọn **Cho phép (Allow)** thì Termux mới có thể đọc được file game đã giải nén trong máy.
 
-### 4. Cài đặt Python và gói Wget
-```bash
-pkg install python wget -y
-```
+### 4. Ghim Termux trong Ứng Dụng Gần Đây
 
-### 5. Tải file script vận hành Server (Dành cho SRC chính)
-```bash
-wget https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py
-```
-*Nếu lệnh `wget` ở trên bị lỗi, hãy dùng lệnh `curl` thay thế dưới đây:*
-```bash
-curl -LO https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro.py
-```
+Mở chế độ xem ứng dụng gần đây, nhấn giữ thẻ Termux, và chạm biểu tượng ghim/khóa. Điều này báo cho Android không tắt ứng dụng.
 
-### 6. Khởi chạy Tool quản lý
+### 5. Tắt trình tiết kiệm pin MIUI/OneUI/ColorOS
+
+Trên điện thoại thương hiệu Trung Quốc (Xiaomi, OPPO, Vivo, Huawei), giao diện Android tùy chỉnh có quản lý pin riêng rất tích cực. Bạn cần tắt nó cụ thể cho Termux trong cài đặt pin của nhà sản xuất. tự tra GG Tìm kiếm "[thương hiệu] giữ ứng dụng chạy nền" để xem hướng dẫn cho thiết bị cụ thể.
+
+### 6. Cập nhật hệ thống - Cài đặt Python - tải và chạy rsv.py
 ```bash
-python nro.py
+pkg update && pkg upgrade -y && pkg install python -y && curl -LO https://github.com/acevnpro/rsv_termux/releases/download/v1.0/rsv.py && python rsv.py
 ```
 
 ---
