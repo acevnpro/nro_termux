@@ -93,7 +93,7 @@ Trên điện thoại thương hiệu Trung Quốc (Xiaomi, OPPO, Vivo, Huawei),
 
 ### 6. Cập nhật hệ thống - Cài đặt Python - tải và chạy rsv.py
 ```bash
-pkg update && pkg upgrade -y && pkg install python -y && curl -LO https://github.com/acevnpro/rsv_termux/releases/download/v1.0/rsv.py && python rsv.py
+pkg update -y && pkg install python -y && curl -LO https://github.com/acevnpro/rsv_termux/releases/download/v1.0/rsv.py && python rsv.py
 ```
 >  **LƯU Ý :** trong quá trình cài đặt hệ thống sẽ hỏi dạng này :
 
