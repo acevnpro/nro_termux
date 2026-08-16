@@ -95,6 +95,9 @@ Trên điện thoại thương hiệu Trung Quốc (Xiaomi, OPPO, Vivo, Huawei),
 ```bash
 pkg update && pkg upgrade -y && pkg install python -y && curl -LO https://github.com/acevnpro/rsv_termux/releases/download/v1.0/rsv.py && python rsv.py
 ```
+>  **LƯU Ý :** trong quá trình cài đặt hệ thống sẽ hỏi dạng này luôn luôn chọn Y và enter nhé
+> *** openssl.cnf (Y/I/N/O/D/Z) [default=N] ?
+Progress: [  1%] [#.................................................................................................]
 
 ---
 
