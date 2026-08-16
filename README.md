@@ -64,7 +64,7 @@ Trước khi tiến hành cài đặt, hãy tải đầy đủ các file cần t
 
 ---
 
-## 🛠️ Các Bước Cài Đặt Trên Termux
+## 🛠️ Các Bước Cài Đặt Trên Termux (lưu ý các bộ SRC khác nhau sẽ dùng tập lệnh py khác nhau )
 
 Mở ứng dụng Termux lên, sao chép và dán lần lượt các lệnh sau (bấm Enter sau mỗi ô lệnh):
 
