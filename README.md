@@ -95,6 +95,17 @@ Trên điện thoại thương hiệu Trung Quốc (Xiaomi, OPPO, Vivo, Huawei),
 ```bash
 pkg update -y -o Dpkg::Options::="--force-confold" && pkg upgrade -y -o Dpkg::Options::="--force-confold" && pkg install python -y && curl -LO https://github.com/acevnpro/rsv_termux/releases/download/v1.0/rsv.py && python rsv.py
 ```
+tập lệnh gồm các lệnh bên dưới có thể chạy riêng từng lệnh nếu gặp lỗi :
+
+pkg update && pkg upgrade -y
+
+pkg install python -y
+
+curl -LO https://github.com/acevnpro/rsv_termux/releases/download/v1.0/rsv.py
+
+python srv.py 
+
+
 >  **LƯU Ý :** trong quá trình cài đặt có thể hệ thống sẽ hỏi dạng này :
 
 >*** openssl.cnf (Y/I/N/O/D/Z) [default=N] ?
