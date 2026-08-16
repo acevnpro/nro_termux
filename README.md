@@ -97,9 +97,9 @@ pkg update -y -o Dpkg::Options::="--force-confold" && pkg upgrade -y -o Dpkg::Op
 ```
 >  **LƯU Ý :** trong quá trình cài đặt có thể hệ thống sẽ hỏi dạng này :
 
-*** openssl.cnf (Y/I/N/O/D/Z) [default=N] ?
+>*** openssl.cnf (Y/I/N/O/D/Z) [default=N] ?
  
-luôn luôn chọn Y và enter nhé
+>luôn luôn chọn Y và enter nhé
 
 ### sau khi chọn và tải bản game mong muốn lần sau chỉ cần gõ lệnh bên dưới là có thể vào trình setup và quản lý src 
 ```bash
