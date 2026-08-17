@@ -44,14 +44,14 @@ Hiện nay đang là thời đại của trí tuệ nhân tạo (AI). Bản ch�
 
 ## ⚠️ Lưu Ý Quan Trọng (Về Ngrok & Cloudflare)
 
-> 💡 **Mẹo nhỏ:** Ở phiên bản mới, nếu sử dụng **TCP Ngrok** thì tài khoản của bạn bắt buộc phải ép thẻ Visa để xác minh danh tính.  
-> Tuy nhiên, web tạo tài khoản này hiện đã tích hợp **Cloudflare Free**, giúp bạn có thể bật thoải mái hoàn toàn miễn phí mà không cần xác minh thẻ phức tạp!
+> 💡 **Mẹo nhỏ:** Ở phiên bản mới, nếu sử dụng **TCP Ngrok** thì tài khoản của bạn bắt buộc phải ép thẻ Visa để xác minh danh tính và chỉ có dung lượng 1GB/ tháng nên sử dụng VPN tailscale là lựa chọn chơi chung từ xa hiệu quả nhất hiện tại.  
+> Web tạo tài khoản đã tích hợp **Cloudflare Free**, giúp bạn có thể bật thoải mái hoàn toàn miễn phí mà không cần xác minh thẻ phức tạp!
 
 ---
 
 ## 📂 Tài Nguyên Tải Về
 
-Trước khi tiến hành cài đặt, hãy tải đầy đủ các file cần thiết sau đây:
+Trước khi tiến hành cài đặt, hãy tải cần tải :
     
   **Ứng dụng Termux:** [Tải Termux bản GitHub (v0.118.3)](https://github.com/termux/termux-app/releases/tag/v0.118.3)  
     *(Nên dùng bản này, tuyệt đối **không** dùng bản tải trên Google Play vì đã quá cũ và bị lỗi kho lưu trữ)*.
@@ -61,7 +61,7 @@ Trước khi tiến hành cài đặt, hãy tải đầy đủ các file cần t
 
 ## 🛠️ Ngăn Android Tắt Termux
 
-Đây là bước quan trọng nhất. Android tích cực tắt các ứng dụng nền để tiết kiệm pin. Nếu không có các cài đặt này, tác tử sẽ ngừng hoạt động khi bạn khóa màn hình.
+Đây là bước quan trọng nhất. hiện nay Android tích cực tắt các ứng dụng nền để tiết kiệm pin. Nếu không có các cài đặt này, ứng dụng sẽ bị ngừng hoạt động khi bạn khóa màn hình.
 
 ### 1. Tắt tối ưu hóa pin
 
@@ -156,6 +156,8 @@ rm -rf $PREFIX/var/lib/mysql && mysql_install_db && cd ~ && rm -rf *
 * **Vào game:** Bạn cài đặt và mở trực tiếp file game `.apk` nằm sẵn trong file zip được cung cấp. Hoặc sử dụng file `nro.apk` có sẵn trong thư mục Google Drive tổng hợp (áp dụng đối với các bản src 02, 03, 04).
 * **Cách chơi chung mạng Wifi:** Để chia sẻ cho thiết bị khác chơi cùng trong một mạng Wifi, bạn chỉ cần lấy địa chỉ IP nội bộ của máy chủ (máy đang chạy server Termux) rồi nhập địa chỉ IP đó vào phần cấu hình của bản game trên máy bạn bè là xong.
 * **Lưu ý quan trọng khi đổi IP:** Thỉnh thoảng modem Wifi nhà bạn sẽ tự động reset hoặc cấp phát lại địa chỉ IP mới cho điện thoại. Lúc này, toàn bộ dữ liệu game của bạn **không hề bị mất**. Bạn chỉ cần mở app quản lý lên và thực hiện lại thao tác từ **Bước 4** để hệ thống cập nhật lại địa chỉ IP mới là có thể tiếp tục quất game bình thường!
+
+* **Video Hướng Dẫn sử dụng VPN để chơi chung từ xa :** [Xem trên Facebook ](https://youtu.be/AhwYRrBiW6w?si=BCl4FdNa_MGfAXrG)
 
 ---
 
