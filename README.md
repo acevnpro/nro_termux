@@ -172,4 +172,7 @@ Trong quá trình vận hành Server trên môi trường Android, bạn có th�
 
 ---
 bạn có thể donate cho tôi tại 9704229255283934 Viettel Money Phạm Văn Hiến
+
+---
+
 ❤️ *Hãy cùng chia sẻ rộng rãi thành quả cho mọi người cùng trải nghiệm nhé! Chúc các bạn chơi game và mod game thật vui vẻ!*
