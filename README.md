@@ -26,7 +26,8 @@ Tham gia ngay các nhóm cộng đồng dưới đây để cùng thảo luận,
 * **Phở Bò (Facebook Group):** [Cộng đồng NRO Termux](https://www.facebook.com/groups/nro.termux)
 * **Nhóm Zalo hỗ trợ:** [Tham gia Nhóm Zalo](https://zalo.me/g/nran3u1pi3hgm9mq5mpc)
 * **Video Hướng Dẫn Chi Tiết:** [Xem trên YouTube](https://www.youtube.com/watch?v=D4LTha2tiVU)
-* **Video Hướng Dẫn cho src_4:** [Xem trên Facebook ](https://www.facebook.com/share/v/1CdR4m9ze5/)  
+* **Video Hướng Dẫn cho src_4:** [Xem trên Facebook ](https://www.facebook.com/share/v/1CdR4m9ze5/)
+* **Video Hướng Dẫn Mới Nhất:** [Xem trên YouTube ](https://youtu.be/tsEBebgfi0E?si=0Ps84ecsBdlM2SOn)  
 
 > 🔴 **LƯU Ý ĐẶC BIỆT:** Đây là dự án phi lợi nhuận, mọi người tham gia và cống hiến đều dựa trên tinh thần đam mê là chính, không ai có nghĩa vụ hay bắt buộc phải hỗ trợ bạn. Vì vậy, nếu nhận được sự trợ giúp từ thành viên khác, hãy luôn thể hiện lòng biết ơn.
 
@@ -51,16 +52,10 @@ Hiện nay đang là thời đại của trí tuệ nhân tạo (AI). Bản ch�
 ## 📂 Tài Nguyên Tải Về
 
 Trước khi tiến hành cài đặt, hãy tải đầy đủ các file cần thiết sau đây:
-
-1.  **Thư mục tổng hợp:** [Tất cả file cần thiết cho dự án](https://drive.google.com/drive/folders/1m9yQjo7JuaKr8So16u8k2hkGrO-xVL9V?usp=sharing)  
-    *(Bao gồm file khung chỉnh sửa để ném vào thư mục `antigravity` cùng với `src` and `nro.py`)*.
-2.  **Mã nguồn Game (SRC 1):** [Tải file Src tại đây](https://drive.google.com/file/d/17wqWUp3avOhv6xkgbX03joR3zLH6A7i1/view?usp=sharing)  
-    *(Bản SRC này do anh Tuấn Tò Mò chia sẻ tại video [Xem trên YouTube](https://www.youtube.com/watch?v=WHOe6tFzb80). Yêu cầu tải về và giải nén trong thư mục **Download** của điện thoại)*.
-3.  **Ứng dụng Termux:** [Tải Termux bản GitHub (v0.118.3)](https://github.com/termux/termux-app/releases/tag/v0.118.3)  
+    
+  **Ứng dụng Termux:** [Tải Termux bản GitHub (v0.118.3)](https://github.com/termux/termux-app/releases/tag/v0.118.3)  
     *(Nên dùng bản này, tuyệt đối **không** dùng bản tải trên Google Play vì đã quá cũ và bị lỗi kho lưu trữ)*.
-```bash
-   curl -LO https://github.com/acevnpro/rsv_termux/releases/download/v1.0/rsv.py
-```
+
 
 ---
 
@@ -121,7 +116,11 @@ python rsv.py
 
 ## 🎮 Hướng Dẫn Thao Tác Trong Ứng Dụng
 
-Khi giao diện ứng dụng quản lý hiện lên, bạn tiến hành bấm chọn theo đúng thứ tự các con số sau để setup:
+Khi giao diện ứng dụng quản lý hiện lên, bạn tiến hành bấm chọn src muốn cài đặt 
+sau link tải SRC và Client (APK/jar) sẽ đi kèm với bản SRC bạn chọn 
+sau khi giao diện tool thay đổi lần lượt chọn theo đúng thứ tự các con số sau để setup:
+lưu ý các loại src có cách setup và chạy khác nhau nên có công đoạn lựa chọn khác nhau 
+các bạn cứ chọn lần lượt theo mục từ bé đến lớn tỉ lệ thành công sẽ cao nhất
 
 * **Bước 1:** Chọn `1` -> 1 (khuyên dùng ) hoặc 2 nếu máy của bạn không cài được LEMP 
 * **Bước 2:** Chọn `2` Hãy tìm và chọn chính xác mục **SrcVipByVanTuan_termux hoặc SRC bạn đang cài đặt**
@@ -140,29 +139,10 @@ Khi giao diện ứng dụng quản lý hiện lên, bạn tiến hành bấm ch
 
 ---
 
-## 📂 Các Bộ Source (SRC) Mở Rộng Khác
+## 📂 Dưới đây là link Driver của tôi gồm có các công cụ và SRC:
 
-Đối với các bộ SRC khác như SRC 02, 03, 04... thì quy trình cài đặt hoàn toàn tương tự nhưng không cần giải nén SRC chỉ cần để trong thư mục download ĐT. Tuy nhiên, bạn sẽ cần tải đúng phiên bản script `nro.py` tương ứng (Ví dụ: chạy `src_4` thì phải dùng file `nro4.py`). và 2 bộ src này sẽ dùng chung 1 bản mod này https://drive.google.com/file/d/1K1bwBRhiyNLfEMuOo2Yujs2CGe9yMIip/view?usp=drive_link
-
-
-Dưới đây là link tải SRC mở rộng kèm lệnh tải file Python quản lý tương ứng:
-
-### 📦 Bộ SRC_3
-* **Link tải Source:** [Tải file Src_3 tại đây](https://drive.google.com/file/d/1xGDGjNTqZHv9e-i1DOw_4wRiRyQp081M/view?usp=drive_link)  
-  *(Bộ SRC này được chia sẻ bởi **DAITEN Studio** tại video [Xem trên YouTube](https://www.youtube.com/watch?v=YTnZo66T0Tk&t=10s})*
-* **Lệnh tải script quản lý nro3.py:**
-```bash
-curl -LO https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro3.py
-```
-
-### 📦 Bộ SRC_4
-* **Link tải Source:** [Tải file Src_4 tại đây](https://drive.google.com/file/d/1kahsNgga4pH0gzFlMtAbvf45Np82Ex1I/view?usp=drive_link)  
-  *(Bộ SRC này được chia sẻ bởi **DAITEN Studio** tại video [Xem trên YouTube](https://www.youtube.com/watch?v=CLxdt8_fa6U&t=341s})*
-* **Lệnh tải script quản lý nro4.py:**
-```bash
-curl -LO https://github.com/acevnpro/nro_termux/releases/download/v1.2/nro4.py
-```
-
+  **Thư mục tổng hợp:** [Tất cả file cần thiết cho dự án](https://drive.google.com/drive/folders/1m9yQjo7JuaKr8So16u8k2hkGrO-xVL9V?usp=sharing)  
+    *(Bao gồm file khung chỉnh sửa để ném vào thư mục `antigravity` cùng với `src` and `nro.py`)*.
 ---
 > 💡 **Lệnh xóa data termux nhanh không cần cài lại python khi test ( nếu cần ổn định vẫn nên xóa data termux ):**
 ```bash
