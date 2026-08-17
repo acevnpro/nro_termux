@@ -171,4 +171,5 @@ Trong quá trình vận hành Server trên môi trường Android, bạn có th�
     * *Cách xử lý:* Các bạn có thể chủ động tìm kiếm từ khóa lỗi này trên Google hoặc copy dòng lỗi gửi cho AI để được hướng dẫn các dòng lệnh tắt tính năng Phantom Killer trong hệ thống nhé!
 
 ---
+bạn có thể donate cho tôi tại 9704229255283934 Viettel Money Phạm Văn Hiến
 ❤️ *Hãy cùng chia sẻ rộng rãi thành quả cho mọi người cùng trải nghiệm nhé! Chúc các bạn chơi game và mod game thật vui vẻ!*
