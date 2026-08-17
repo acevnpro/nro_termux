@@ -157,7 +157,7 @@ rm -rf $PREFIX/var/lib/mysql && mysql_install_db && cd ~ && rm -rf *
 * **Cách chơi chung mạng Wifi:** Để chia sẻ cho thiết bị khác chơi cùng trong một mạng Wifi, bạn chỉ cần lấy địa chỉ IP nội bộ của máy chủ (máy đang chạy server Termux) rồi nhập địa chỉ IP đó vào phần cấu hình của bản game trên máy bạn bè là xong.
 * **Lưu ý quan trọng khi đổi IP:** Thỉnh thoảng modem Wifi nhà bạn sẽ tự động reset hoặc cấp phát lại địa chỉ IP mới cho điện thoại. Lúc này, toàn bộ dữ liệu game của bạn **không hề bị mất**. Bạn chỉ cần mở app quản lý lên và thực hiện lại thao tác từ **Bước 4** để hệ thống cập nhật lại địa chỉ IP mới là có thể tiếp tục quất game bình thường!
 
-* **Video Hướng Dẫn sử dụng VPN để chơi chung từ xa :** [Xem trên Facebook ](https://youtu.be/AhwYRrBiW6w?si=BCl4FdNa_MGfAXrG)
+* **Video Hướng Dẫn sử dụng VPN để chơi chung từ xa :** [Xem trên Youtube ](https://youtu.be/AhwYRrBiW6w?si=BCl4FdNa_MGfAXrG)
 
 ---
 
